@@ -1,0 +1,57 @@
+# TuxPilot Ollama Konfiguration
+# Kopiere diese Datei nach ~/.config/tuxpilot/config.toml
+
+[ai]
+# Ollama als AI-Provider verwenden (lokal, keine API-Keys nötig!)
+provider = "Ollama"
+
+# Ollama Konfiguration
+[ai.ollama]
+# Ollama Server URL (Standard: localhost)
+base_url = "http://localhost:11434"
+
+# Modell-Name (muss in Ollama installiert sein)
+# Beliebte Optionen:
+# - "llama3.1:8b" (empfohlen für die meisten Systeme)
+# - "llama3.1:70b" (sehr gut, braucht viel RAM)
+# - "codellama:7b" (speziell für Code)
+# - "mistral:7b" (schnell und effizient)
+model = "llama3.1:8b"
+
+# Kreativität (0.0 = sehr konservativ, 1.0 = sehr kreativ)
+temperature = 0.7
+
+# Kontext-Größe (wie viel Text das Modell "erinnert")
+context_size = 4096
+
+# Timeout in Sekunden
+timeout_seconds = 30
+
+# Optional: OpenAI Konfiguration (als Fallback)
+[ai.openai]
+api_key = ""
+model = "gpt-4"
+
+# Optional: Anthropic Konfiguration (als Fallback)
+# [ai.anthropic]
+# api_key = ""
+# model = "claude-3-sonnet-20240229"
+
+[system]
+# Wird automatisch erkannt, kann aber überschrieben werden
+package_manager = "Pacman"
+service_manager = "Systemd"
+
+# Log-Dateien zum Überwachen
+log_paths = [
+    "/var/log/syslog",
+    "/var/log/messages",
+    "/var/log/kern.log",
+    "/var/log/auth.log",
+    "/var/log/pacman.log"
+]
+
+[ui]
+theme = "default"
+show_tips = true
+auto_suggest = true

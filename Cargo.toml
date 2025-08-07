@@ -1,0 +1,81 @@
+[package]
+name = "tuxpilot"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "An AI-powered copilot for Linux systems - error diagnosis, troubleshooting, and system assistance"
+license = "MIT"
+repository = "https://github.com/yourusername/tuxpilot"
+keywords = ["linux", "ai", "copilot", "cli", "system-administration"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+# CLI Framework
+clap = { version = "4.4", features = ["derive", "color"] }
+dialoguer = "0.11"
+console = "0.15"
+indicatif = "0.17"
+
+# Async Runtime
+tokio = { version = "1.0", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+toml = "0.8"
+
+# HTTP Client for AI APIs
+reqwest = { version = "0.11", features = ["json", "stream"] }
+
+# System Integration
+sysinfo = "0.30"
+nix = "0.27"
+libc = "0.2"
+
+# Logging
+log = "0.4"
+env_logger = "0.10"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Configuration
+config = "0.14"
+dirs = "5.0"
+
+# Text Processing
+regex = "1.10"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Local AI Model Support (optional)
+candle-core = { version = "0.3", optional = true }
+candle-nn = { version = "0.3", optional = true }
+candle-transformers = { version = "0.3", optional = true }
+
+# Terminal UI
+crossterm = "0.27"
+ratatui = "0.24"
+
+[dev-dependencies]
+tempfile = "3.8"
+assert_cmd = "2.0"
+predicates = "3.0"
+
+[features]
+default = ["cloud-ai"]
+cloud-ai = []
+local-ai = ["candle-core", "candle-nn", "candle-transformers"]
+
+[[bin]]
+name = "tuxpilot"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
