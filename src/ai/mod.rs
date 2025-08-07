@@ -5,6 +5,7 @@ use serde_json::{json, Value};
 use crate::config::{Config, AiProvider};
 use crate::error_diagnosis::ErrorDiagnostic;
 
+#[derive(Clone)]
 pub struct AiClient {
     client: Client,
     config: Config,
@@ -13,7 +14,16 @@ pub struct AiClient {
 
 impl AiClient {
     pub async fn new(config: &Config, use_local: bool) -> Result<Self> {
-        let client = Client::new();
+        // Check for test mode timeout
+        let timeout_secs = if let Ok(timeout_str) = std::env::var("TUXPILOT_AI_TIMEOUT") {
+            timeout_str.parse().unwrap_or(30)
+        } else {
+            30
+        };
+
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(timeout_secs))
+            .build()?;
         
         Ok(Self {
             client,

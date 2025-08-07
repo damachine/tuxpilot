@@ -129,6 +129,25 @@ enum Commands {
         #[arg(long)]
         set: Option<String>,
     },
+
+    /// Start web interface server
+    Web {
+        /// Port to bind the web server to
+        #[arg(short, long, default_value = "8080")]
+        port: u16,
+        /// Bind address for the web server
+        #[arg(long, default_value = "127.0.0.1")]
+        bind: String,
+        /// Enable SSL/TLS
+        #[arg(long)]
+        ssl: bool,
+        /// SSL certificate file path
+        #[arg(long)]
+        ssl_cert: Option<PathBuf>,
+        /// SSL private key file path
+        #[arg(long)]
+        ssl_key: Option<PathBuf>,
+    },
 }
 
 #[tokio::main]

@@ -8,7 +8,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/tuxpilot.git
+git clone https://github.com/damachine/tuxpilot.git
 cd tuxpilot
 
 # Build TuxPilot

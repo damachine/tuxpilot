@@ -7,7 +7,6 @@ use indicatif::{ProgressBar, ProgressStyle};
 use crate::ai::AiClient;
 use crate::config::Config;
 use crate::error_diagnosis::ErrorDiagnostic;
-use crate::execution::CommandExecutor;
 use crate::linux_integration::LinuxIntegration;
 use crate::system_monitor::SystemMonitor;
 use crate::Commands;
@@ -17,7 +16,6 @@ pub struct TuxPilotCli {
     ai_client: AiClient,
     linux_integration: LinuxIntegration,
     system_monitor: SystemMonitor,
-    command_executor: Option<CommandExecutor>,
     term: Term,
 }
 
@@ -36,7 +34,6 @@ impl TuxPilotCli {
             ai_client,
             linux_integration,
             system_monitor,
-            command_executor: None, // Will be initialized when needed
             term,
         })
     }
@@ -72,6 +69,9 @@ impl TuxPilotCli {
             }
             Commands::Config { show, set } => {
                 self.handle_config(show, set).await?;
+            }
+            Commands::Web { port, bind, ssl, ssl_cert, ssl_key } => {
+                self.handle_web_server(port, bind, ssl, ssl_cert, ssl_key).await?;
             }
         }
         Ok(())
@@ -177,16 +177,34 @@ impl TuxPilotCli {
 
     async fn handle_package(&mut self, operation: String, package: Option<String>) -> Result<()> {
         let suggestion = self.linux_integration.get_package_suggestion(&operation, package.as_deref()).await?;
-        let ai_advice = self.ai_client.get_package_advice(&operation, package.as_deref(), &suggestion).await?;
-        
+
+        // Check if we're in test mode
+        let is_test_mode = std::env::var("TUXPILOT_TEST_MODE").is_ok();
+
+        // Try to get AI advice with timeout handling (skip in test mode)
+        let ai_advice = if is_test_mode {
+            format!("Test mode: {}", suggestion)
+        } else {
+            match self.ai_client.get_package_advice(&operation, package.as_deref(), &suggestion).await {
+                Ok(advice) => advice,
+                Err(e) => {
+                    eprintln!("AI advice failed: {}", e);
+                    format!("Basic suggestion: {}", suggestion)
+                }
+            }
+        };
+
         self.term.write_line(&format!("{}", style("📦 Package Management").blue().bold()))?;
         self.term.write_line(&ai_advice)?;
-        
-        if Confirm::new()
-            .with_prompt("Would you like to execute the suggested command?")
-            .interact()?
-        {
-            self.linux_integration.execute_package_command(&suggestion).await?;
+
+        // Skip interactive prompt in test mode
+        if !is_test_mode {
+            if Confirm::new()
+                .with_prompt("Would you like to execute the suggested command?")
+                .interact()?
+            {
+                self.linux_integration.execute_package_command(&suggestion).await?;
+            }
         }
         
         Ok(())
@@ -339,6 +357,111 @@ impl TuxPilotCli {
             self.term.write_line("")?;
             self.term.write_line(&format!("📤 Export format: {}", format))?;
             self.term.write_line("Export functionality will be available soon.")?;
+        }
+
+        Ok(())
+    }
+
+    async fn handle_web_server(
+        &mut self,
+        port: u16,
+        bind: String,
+        ssl: bool,
+        ssl_cert: Option<std::path::PathBuf>,
+        ssl_key: Option<std::path::PathBuf>,
+    ) -> Result<()> {
+        use crate::web::WebServer;
+        use crate::execution::CommandExecutor;
+        use crate::agents::AgentSystem;
+
+        self.term.write_line("🌐 Starting TuxPilot Web Interface...")?;
+        self.term.write_line("")?;
+
+        // Display configuration
+        self.term.write_line(&format!("📡 Server Configuration:"))?;
+        self.term.write_line(&format!("   • Address: {}:{}", bind, port))?;
+        self.term.write_line(&format!("   • SSL/TLS: {}", if ssl { "Enabled" } else { "Disabled" }))?;
+
+        if ssl {
+            if let (Some(cert), Some(key)) = (&ssl_cert, &ssl_key) {
+                self.term.write_line(&format!("   • Certificate: {}", cert.display()))?;
+                self.term.write_line(&format!("   • Private Key: {}", key.display()))?;
+            } else {
+                self.term.write_line("   ⚠️  SSL enabled but certificate/key not specified")?;
+                return Ok(());
+            }
+        }
+
+        self.term.write_line("")?;
+        self.term.write_line("🔧 Initializing components...")?;
+
+        // Initialize required components
+        let command_executor = CommandExecutor::new(
+            self.config.clone(),
+            crate::execution::ExecutionMode::Supervised,
+        ).await?;
+
+        let agent_system = AgentSystem::new(
+            self.config.clone(),
+            self.linux_integration.clone(),
+            self.ai_client.clone(),
+        ).await?;
+
+        // Create web server
+        let web_server = WebServer::new(
+            self.config.clone(),
+            self.linux_integration.clone(),
+            command_executor,
+            agent_system,
+        ).await?;
+
+        self.term.write_line("✅ Components initialized successfully")?;
+        self.term.write_line("")?;
+
+        // Display access information
+        let protocol = if ssl { "https" } else { "http" };
+        let url = format!("{}://{}:{}", protocol, bind, port);
+
+        self.term.write_line("🚀 Web Interface Ready!")?;
+        self.term.write_line("")?;
+        self.term.write_line(&format!("📱 Access URL: {}", url))?;
+        self.term.write_line("")?;
+        self.term.write_line("🔐 Default Login:")?;
+        self.term.write_line("   • Username: admin")?;
+        self.term.write_line("   • Password: admin (change immediately!)")?;
+        self.term.write_line("")?;
+        self.term.write_line("📚 Available Endpoints:")?;
+        self.term.write_line("   • GET  /api/dashboard      - System overview")?;
+        self.term.write_line("   • GET  /api/system/status  - System status")?;
+        self.term.write_line("   • POST /api/commands/execute - Execute commands")?;
+        self.term.write_line("   • GET  /api/logs           - System logs")?;
+        self.term.write_line("   • WS   /ws                 - WebSocket connection")?;
+        self.term.write_line("")?;
+        self.term.write_line("🛡️  Security Features:")?;
+        self.term.write_line("   • Session-based authentication")?;
+        self.term.write_line("   • Granular permission system")?;
+        self.term.write_line("   • Complete audit logging")?;
+        self.term.write_line("   • Same safety controls as CLI")?;
+        self.term.write_line("")?;
+        self.term.write_line("Press Ctrl+C to stop the server")?;
+        self.term.write_line("")?;
+
+        // Start the web server
+        match web_server.start(port).await {
+            Ok(_) => {
+                self.term.write_line("✅ Web server started successfully")?;
+            }
+            Err(e) => {
+                self.term.write_line(&format!("❌ Failed to start web server: {}", e))?;
+                self.term.write_line("")?;
+                self.term.write_line("💡 Troubleshooting tips:")?;
+                self.term.write_line(&format!("   • Check if port {} is already in use", port))?;
+                self.term.write_line("   • Try a different port with --port <PORT>")?;
+                self.term.write_line("   • Check firewall settings")?;
+                if ssl {
+                    self.term.write_line("   • Verify SSL certificate and key files")?;
+                }
+            }
         }
 
         Ok(())

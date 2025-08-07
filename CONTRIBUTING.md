@@ -8,7 +8,7 @@ Thank you for your interest in contributing to TuxPilot! This document provides 
 
 1. **Fork and clone the repository:**
 ```bash
-git clone https://github.com/yourusername/tuxpilot.git
+git clone https://github.com/damachine/tuxpilot.git
 cd tuxpilot
 ```
 

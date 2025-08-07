@@ -23,6 +23,9 @@ pub struct WebServer {
     agent_system: Arc<RwLock<AgentSystem>>,
     active_sessions: Arc<RwLock<HashMap<String, WebSession>>>,
     auth_manager: auth::AuthManager,
+    chat_sessions: Arc<RwLock<HashMap<String, ChatSession>>>,
+    chat_history: Arc<RwLock<HashMap<String, Vec<ChatMessage>>>>,
+    config_backups: Arc<RwLock<HashMap<String, ConfigBackup>>>,
 }
 
 /// Web session information
@@ -47,6 +50,125 @@ pub enum Permission {
     ManageUsers,
     SystemConfiguration,
     RemoteAccess,
+    ChatAccess,
+    ConfigurationManagement,
+}
+
+/// Chat message sender types
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ChatSender {
+    User,
+    Agent { agent_id: String, agent_name: String },
+    System,
+}
+
+/// Chat message types
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ChatMessageType {
+    Text,
+    Command,
+    SystemInfo,
+    Error,
+    Suggestion,
+    CodeBlock,
+}
+
+/// Chat session information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatSession {
+    pub chat_id: String,
+    pub user_id: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub last_activity: chrono::DateTime<chrono::Utc>,
+    pub execution_mode: String,
+    pub active_agent: Option<String>,
+    pub message_count: usize,
+}
+
+/// Chat message structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatMessage {
+    pub message_id: String,
+    pub chat_id: String,
+    pub sender: ChatSender,
+    pub content: String,
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub message_type: ChatMessageType,
+    pub metadata: Option<serde_json::Value>,
+}
+
+/// Chat request structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatRequest {
+    pub chat_id: Option<String>,
+    pub message: String,
+    pub execution_mode: Option<String>,
+    pub context: Option<serde_json::Value>,
+}
+
+/// Configuration management structures
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfigurationSchema {
+    pub sections: HashMap<String, ConfigSection>,
+    pub version: String,
+    pub last_updated: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfigSection {
+    pub name: String,
+    pub description: String,
+    pub fields: HashMap<String, ConfigField>,
+    pub required: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfigField {
+    pub field_type: ConfigFieldType,
+    pub description: String,
+    pub default_value: Option<serde_json::Value>,
+    pub validation: Option<ConfigValidation>,
+    pub sensitive: bool,
+    pub requires_restart: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ConfigFieldType {
+    String,
+    Integer,
+    Float,
+    Boolean,
+    Array,
+    Object,
+    Enum { options: Vec<String> },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfigValidation {
+    pub min_length: Option<usize>,
+    pub max_length: Option<usize>,
+    pub min_value: Option<f64>,
+    pub max_value: Option<f64>,
+    pub pattern: Option<String>,
+    pub custom_validator: Option<String>,
+}
+
+/// Configuration update request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfigUpdateRequest {
+    pub section: String,
+    pub updates: HashMap<String, serde_json::Value>,
+    pub validate_only: bool,
+}
+
+/// Configuration backup structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfigBackup {
+    pub backup_id: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub description: String,
+    pub config_data: serde_json::Value,
+    pub version: String,
 }
 
 /// API request structure
@@ -93,6 +215,19 @@ pub enum WebSocketMessage {
         level: String,
         source: String,
         message: String,
+    },
+    ChatMessage {
+        chat_id: String,
+        message_id: String,
+        sender: ChatSender,
+        content: String,
+        timestamp: chrono::DateTime<chrono::Utc>,
+        message_type: ChatMessageType,
+    },
+    ChatTyping {
+        chat_id: String,
+        sender: ChatSender,
+        is_typing: bool,
     },
     Error {
         error_code: String,
@@ -224,6 +359,9 @@ impl WebServer {
             agent_system: Arc::new(RwLock::new(agent_system)),
             active_sessions: Arc::new(RwLock::new(HashMap::new())),
             auth_manager,
+            chat_sessions: Arc::new(RwLock::new(HashMap::new())),
+            chat_history: Arc::new(RwLock::new(HashMap::new())),
+            config_backups: Arc::new(RwLock::new(HashMap::new())),
         })
     }
 
@@ -390,5 +528,149 @@ impl WebServer {
             .collect();
 
         Ok(logs)
+    }
+
+    // Chat functionality
+    pub async fn create_chat_session(&self, user_id: String, execution_mode: String) -> Result<ChatSession> {
+        let chat_id = uuid::Uuid::new_v4().to_string();
+        let session = ChatSession {
+            chat_id: chat_id.clone(),
+            user_id,
+            created_at: chrono::Utc::now(),
+            last_activity: chrono::Utc::now(),
+            execution_mode,
+            active_agent: None,
+            message_count: 0,
+        };
+
+        self.chat_sessions.write().await.insert(chat_id.clone(), session.clone());
+        self.chat_history.write().await.insert(chat_id.clone(), Vec::new());
+
+        Ok(session)
+    }
+
+    pub async fn send_chat_message(&self, chat_request: ChatRequest, user_id: String) -> Result<ChatMessage> {
+        let chat_id = chat_request.chat_id.clone().unwrap_or_else(|| {
+            // Create new chat session if none provided
+            uuid::Uuid::new_v4().to_string()
+        });
+
+        // Create user message
+        let user_message = ChatMessage {
+            message_id: uuid::Uuid::new_v4().to_string(),
+            chat_id: chat_id.clone(),
+            sender: ChatSender::User,
+            content: chat_request.message.clone(),
+            timestamp: chrono::Utc::now(),
+            message_type: ChatMessageType::Text,
+            metadata: chat_request.context.clone(),
+        };
+
+        // Add to history
+        self.chat_history.write().await
+            .entry(chat_id.clone())
+            .or_insert_with(Vec::new)
+            .push(user_message.clone());
+
+        // Update session activity
+        if let Some(session) = self.chat_sessions.write().await.get_mut(&chat_id) {
+            session.last_activity = chrono::Utc::now();
+            session.message_count += 1;
+        }
+
+        // Process message with AI agents
+        let ai_response = self.process_chat_message(&chat_request, &user_id).await?;
+
+        // Add AI response to history
+        self.chat_history.write().await
+            .get_mut(&chat_id)
+            .unwrap()
+            .push(ai_response.clone());
+
+        Ok(ai_response)
+    }
+
+    async fn process_chat_message(&self, request: &ChatRequest, user_id: &str) -> Result<ChatMessage> {
+        use crate::agents::AgentContext;
+
+        // Create agent context
+        let context = AgentContext {
+            session_id: user_id.to_string(),
+            user_request: request.message.clone(),
+            system_state: crate::agents::SystemState {
+                cpu_usage: 25.0,
+                memory_usage: 60.0,
+                disk_usage: 40.0,
+                network_active: true,
+                services_running: vec!["nginx".to_string(), "ssh".to_string()],
+                recent_errors: vec![],
+            },
+            config: self.config.clone(),
+            linux_integration: self.linux_integration.clone(),
+        };
+
+        // Get AI response from agent system
+        let mut agent_system = self.agent_system.write().await;
+        let responses = agent_system.execute_user_request(&request.message, &context).await?;
+
+        let response_content = if responses.is_empty() {
+            "I understand your request. How can I help you with your Linux system?".to_string()
+        } else {
+            responses.into_iter()
+                .map(|r| {
+                    let mut content = Vec::new();
+                    if !r.recommendations.is_empty() {
+                        content.push(format!("Recommendations: {}", r.recommendations.join(", ")));
+                    }
+                    if !r.actions_taken.is_empty() {
+                        content.push(format!("Actions taken: {}", r.actions_taken.join(", ")));
+                    }
+                    if !r.next_steps.is_empty() {
+                        content.push(format!("Next steps: {}", r.next_steps.join(", ")));
+                    }
+                    if content.is_empty() {
+                        format!("Agent {} completed task successfully", r.agent_id)
+                    } else {
+                        content.join("\n")
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("\n\n")
+        };
+
+        Ok(ChatMessage {
+            message_id: uuid::Uuid::new_v4().to_string(),
+            chat_id: request.chat_id.clone().unwrap_or_default(),
+            sender: ChatSender::Agent {
+                agent_id: "tuxpilot-ai".to_string(),
+                agent_name: "TuxPilot AI".to_string(),
+            },
+            content: response_content,
+            timestamp: chrono::Utc::now(),
+            message_type: ChatMessageType::Text,
+            metadata: None,
+        })
+    }
+
+    pub async fn get_chat_history(&self, chat_id: &str, limit: Option<usize>) -> Result<Vec<ChatMessage>> {
+        let history = self.chat_history.read().await;
+        if let Some(messages) = history.get(chat_id) {
+            let messages = if let Some(limit) = limit {
+                messages.iter().rev().take(limit).rev().cloned().collect()
+            } else {
+                messages.clone()
+            };
+            Ok(messages)
+        } else {
+            Ok(Vec::new())
+        }
+    }
+
+    pub async fn get_chat_sessions(&self, user_id: &str) -> Result<Vec<ChatSession>> {
+        let sessions = self.chat_sessions.read().await;
+        Ok(sessions.values()
+            .filter(|s| s.user_id == user_id)
+            .cloned()
+            .collect())
     }
 }

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuxPilot API Tester</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 5px solid #007bff;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .response-area {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+        .endpoint-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐧 TuxPilot API Tester</h1>
+            <p>Interactive Testing Interface for TuxPilot Web API</p>
+            <div id="server-status">
+                <span class="status-indicator status-offline"></span>
+                <span>Checking server status...</span>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Chat Interface Tests -->
+            <div class="test-section">
+                <h3>💬 Chat Interface</h3>
+                
+                <div class="input-group">
+                    <label>Chat Message:</label>
+                    <textarea id="chatMessage" rows="3" placeholder="What is the current system status?">What is the current system status?</textarea>
+                </div>
+                <button class="test-button" onclick="sendChatMessage()">Send Chat Message</button>
+                <button class="test-button" onclick="createChatSession()">Create Chat Session</button>
+                <button class="test-button" onclick="getChatSessions()">Get Chat Sessions</button>
+                
+                <div class="endpoint-info">POST /api/chat | POST /api/chat/session | GET /api/chat/sessions</div>
+                <div id="chatResponse" class="response-area">Click a button to test the chat interface...</div>
+            </div>
+
+            <!-- Configuration Management Tests -->
+            <div class="test-section">
+                <h3>⚙️ Configuration Management</h3>
+                
+                <button class="test-button" onclick="getConfig()">Get Configuration</button>
+                <button class="test-button" onclick="getConfigSchema()">Get Schema</button>
+                <button class="test-button" onclick="validateConfig()">Validate Config</button>
+                <button class="test-button" onclick="createBackup()">Create Backup</button>
+                
+                <div class="endpoint-info">GET /api/config | GET /api/config/schema | POST /api/config/validate | POST /api/config/backup</div>
+                <div id="configResponse" class="response-area">Click a button to test configuration management...</div>
+            </div>
+
+            <!-- System Status Tests -->
+            <div class="test-section">
+                <h3>📊 System Information</h3>
+                
+                <button class="test-button" onclick="getSystemStatus()">System Status</button>
+                <button class="test-button" onclick="getHealth()">Health Check</button>
+                <button class="test-button" onclick="getApiInfo()">API Info</button>
+                
+                <div class="endpoint-info">GET /api/system/status | GET /health | GET /</div>
+                <div id="systemResponse" class="response-area">Click a button to test system endpoints...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8080';
+        const AUTH_TOKEN = 'demo-token';
+
+        // Check server status on load
+        window.onload = function() {
+            checkServerStatus();
+        };
+
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    document.getElementById('server-status').innerHTML = 
+                        '<span class="status-indicator status-online"></span><span>Server Online</span>';
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                document.getElementById('server-status').innerHTML = 
+                    '<span class="status-indicator status-offline"></span><span>Server Offline</span>';
+            }
+        }
+
+        async function makeRequest(endpoint, method = 'GET', body = null) {
+            const options = {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${AUTH_TOKEN}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+                return {
+                    status: response.status,
+                    data: data
+                };
+            } catch (error) {
+                return {
+                    status: 'ERROR',
+                    data: { error: error.message }
+                };
+            }
+        }
+
+        // Chat Interface Functions
+        async function sendChatMessage() {
+            const message = document.getElementById('chatMessage').value;
+            const result = await makeRequest('/api/chat', 'POST', { message: message });
+            document.getElementById('chatResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        async function createChatSession() {
+            const result = await makeRequest('/api/chat/session', 'POST', { execution_mode: 'supervised' });
+            document.getElementById('chatResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        async function getChatSessions() {
+            const result = await makeRequest('/api/chat/sessions');
+            document.getElementById('chatResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        // Configuration Management Functions
+        async function getConfig() {
+            const result = await makeRequest('/api/config');
+            document.getElementById('configResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        async function getConfigSchema() {
+            const result = await makeRequest('/api/config/schema');
+            document.getElementById('configResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        async function validateConfig() {
+            const result = await makeRequest('/api/config/validate', 'POST', {
+                section: 'ai',
+                updates: { provider: 'openai', model: 'gpt-4' },
+                validate_only: true
+            });
+            document.getElementById('configResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        async function createBackup() {
+            const result = await makeRequest('/api/config/backup', 'POST', {
+                description: 'Test backup from web interface'
+            });
+            document.getElementById('configResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        // System Information Functions
+        async function getSystemStatus() {
+            const result = await makeRequest('/api/system/status');
+            document.getElementById('systemResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        async function getHealth() {
+            const result = await makeRequest('/health');
+            document.getElementById('systemResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+
+        async function getApiInfo() {
+            const result = await makeRequest('/');
+            document.getElementById('systemResponse').textContent = 
+                `Status: ${result.status}\n\n${JSON.stringify(result.data, null, 2)}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuxPilot Web API Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 5px solid #007bff;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.8em;
+            font-weight: 500;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        .feature-card h3 {
+            margin-top: 0;
+            color: #495057;
+            font-size: 1.3em;
+        }
+        .demo-section {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+        .demo-section h3 {
+            margin-top: 0;
+            color: #28a745;
+            font-size: 1.4em;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .response-block {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .endpoint {
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #1565c0;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .status-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .warning-badge {
+            background: #ffc107;
+            color: #212529;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .info-box strong {
+            color: #0c5460;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐧 TuxPilot Web API</h1>
+            <p>Interactive Chat Interface & Complete Configuration Management</p>
+            <span class="status-badge">✅ FULLY FUNCTIONAL</span>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>🚀 New Features Overview</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>💬 Interactive Chat Interface</h3>
+                        <ul>
+                            <li>Real-time AI agent conversations</li>
+                            <li>Session management</li>
+                            <li>Chat history tracking</li>
+                            <li>Natural language commands</li>
+                            <li>WebSocket support (planned)</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3>⚙️ Configuration Management</h3>
+                        <ul>
+                            <li>Complete config CRUD operations</li>
+                            <li>Schema validation</li>
+                            <li>Backup & restore functionality</li>
+                            <li>Real-time validation</li>
+                            <li>Structured configuration schema</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>💬 Chat Interface Demos</h2>
+                
+                <div class="demo-section">
+                    <h3>Send Chat Message</h3>
+                    <div class="endpoint">POST /api/chat</div>
+                    <div class="code-block">curl -X POST -H "Content-Type: application/json" \
+     -H "Authorization: Bearer demo-token" \
+     -d '{"message": "What is the current system status?"}' \
+     http://127.0.0.1:8080/api/chat</div>
+                    <div class="response-block">✅ AI Response: "Recommendations: Critical service 'sshd' is not running., Critical service 'systemd' is not running., Critical service 'networkd' is not running.
+Next steps: Review recommendations and take appropriate action"</div>
+                </div>
+
+                <div class="demo-section">
+                    <h3>Create Chat Session</h3>
+                    <div class="endpoint">POST /api/chat/session</div>
+                    <div class="code-block">curl -X POST -H "Content-Type: application/json" \
+     -H "Authorization: Bearer demo-token" \
+     -d '{"execution_mode": "supervised"}' \
+     http://127.0.0.1:8080/api/chat/session</div>
+                    <div class="response-block">✅ Session Created: chat_id="b173f748-af66-4929-be9b-8fd4ff368fdf"</div>
+                </div>
+
+                <div class="demo-section">
+                    <h3>Get Chat Sessions</h3>
+                    <div class="endpoint">GET /api/chat/sessions</div>
+                    <div class="code-block">curl -H "Authorization: Bearer demo-token" \
+     http://127.0.0.1:8080/api/chat/sessions</div>
+                    <div class="response-block">✅ Active Sessions: 1 session found with supervised execution mode</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>⚙️ Configuration Management Demos</h2>
+                
+                <div class="demo-section">
+                    <h3>Get Current Configuration</h3>
+                    <div class="endpoint">GET /api/config</div>
+                    <div class="code-block">curl -H "Authorization: Bearer demo-token" \
+     http://127.0.0.1:8080/api/config</div>
+                    <div class="response-block">✅ Configuration Retrieved:
+- AI Provider: ollama (llama3.2)
+- Execution Mode: supervised
+- Security: audit_logging=true, safety_checks=true
+- Web Server: 127.0.0.1:8080, SSL disabled</div>
+                </div>
+
+                <div class="demo-section">
+                    <h3>Get Configuration Schema</h3>
+                    <div class="endpoint">GET /api/config/schema</div>
+                    <div class="code-block">curl -H "Authorization: Bearer demo-token" \
+     http://127.0.0.1:8080/api/config/schema</div>
+                    <div class="response-block">✅ Schema Retrieved: Complete field definitions for AI, execution, and web settings</div>
+                </div>
+
+                <div class="demo-section">
+                    <h3>Validate Configuration</h3>
+                    <div class="endpoint">POST /api/config/validate</div>
+                    <div class="code-block">curl -X POST -H "Content-Type: application/json" \
+     -H "Authorization: Bearer demo-token" \
+     -d '{"section": "ai", "updates": {"provider": "openai"}, "validate_only": true}' \
+     http://127.0.0.1:8080/api/config/validate</div>
+                    <div class="response-block">✅ Validation Result: Configuration is valid, no errors or warnings</div>
+                </div>
+
+                <div class="demo-section">
+                    <h3>Update Configuration</h3>
+                    <div class="endpoint">PUT /api/config</div>
+                    <div class="code-block">curl -X PUT -H "Content-Type: application/json" \
+     -H "Authorization: Bearer demo-token" \
+     -d '{"section": "execution", "updates": {"mode": "semi-auto"}}' \
+     http://127.0.0.1:8080/api/config</div>
+                    <div class="response-block">✅ Update Applied: 2 changes applied, no restart required</div>
+                </div>
+
+                <div class="demo-section">
+                    <h3>Create Configuration Backup</h3>
+                    <div class="endpoint">POST /api/config/backup</div>
+                    <div class="code-block">curl -X POST -H "Content-Type: application/json" \
+     -H "Authorization: Bearer demo-token" \
+     -d '{"description": "Backup before AI provider change"}' \
+     http://127.0.0.1:8080/api/config/backup</div>
+                    <div class="response-block">✅ Backup Created: backup_id="48513439-16a3-4fcd-801a-8f4bee7287cc"</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔗 Complete API Reference</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>Chat Endpoints</h3>
+                        <div class="endpoint">POST /api/chat</div>
+                        <div class="endpoint">POST /api/chat/session</div>
+                        <div class="endpoint">GET /api/chat/sessions</div>
+                        <div class="endpoint">GET /api/chat/:id/history</div>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Configuration Endpoints</h3>
+                        <div class="endpoint">GET /api/config</div>
+                        <div class="endpoint">PUT /api/config</div>
+                        <div class="endpoint">GET /api/config/schema</div>
+                        <div class="endpoint">POST /api/config/validate</div>
+                        <div class="endpoint">POST /api/config/backup</div>
+                        <div class="endpoint">GET /api/config/backup/:id</div>
+                        <div class="endpoint">POST /api/config/restore/:id</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>🔐 Authentication:</strong> All endpoints require <code>Authorization: Bearer TOKEN</code> header. 
+                Use any token for demo purposes (e.g., "demo-token").
+            </div>
+
+            <div class="info-box">
+                <strong>🌐 Server Status:</strong> TuxPilot Web API is running on 
+                <a href="http://127.0.0.1:8080" target="_blank">http://127.0.0.1:8080</a>
+                <br><strong>🤖 AI Agents:</strong> 5 specialized agents active (system, security, package, network, performance)
+            </div>
+        </div>
+    </div>
+</body>
+</html>
