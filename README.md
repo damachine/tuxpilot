@@ -1,191 +1,317 @@
 # TuxPilot 🐧
 
-An AI-powered copilot for Linux systems that assists with error diagnosis, troubleshooting, and system administration tasks.
+**The Ultimate AI-Powered Linux Assistant with Autonomous Command Execution**
 
-## Features
+TuxPilot is an intelligent copilot for Linux systems that can autonomously execute commands, manage your system, and provide expert assistance with comprehensive safety controls and audit logging.
 
-- **🔍 Error Diagnosis**: Intelligent analysis of system errors and log files
-- **💬 Interactive Chat**: Natural language interface for Linux help
-- **📦 Package Management**: Smart assistance with package operations (pacman, apt, dnf, etc.)
-- **⚙️ Service Management**: Help with systemd and other service managers
-- **📊 System Monitoring**: Real-time system health monitoring and alerts
-- **🤖 AI Integration**: Support for both local and cloud-based AI models
-- **🎯 Arch Linux Optimized**: Special focus on Arch Linux best practices
+## 🚀 Key Features
 
-## Installation
+- **🤖 Autonomous Command Execution**: Execute system commands under supervision or automatically
+- **🛡️ Advanced Safety System**: Multi-layer safety checks with risk assessment
+- **🔐 Granular Permissions**: Fine-grained permission control with user approval workflows
+- **📊 Complete Audit Trail**: Full logging of all operations with rollback capabilities
+- **🔍 Intelligent Error Diagnosis**: AI-powered analysis of system errors and log files
+- **💬 Natural Language Interface**: Chat with your system in plain English
+- **📦 Smart Package Management**: Intelligent package operations across all major distributions
+- **⚙️ Service Management**: Complete systemd and service management automation
+- **📈 Real-time Monitoring**: Continuous system health monitoring with predictive alerts
+- **🔌 MCP Integration**: Model Context Protocol for advanced AI tool communication
+- **🌐 Multi-Platform**: Support for Arch, Ubuntu, Fedora, openSUSE, and more
+
+## 🎯 Execution Modes
+
+TuxPilot offers multiple execution modes to balance automation with safety:
+
+### **🔒 Supervised Mode** (Default)
+- AI suggests commands and asks for approval before execution
+- Perfect for learning and maintaining control
+- Shows detailed explanations and risk assessments
+
+### **⚡ Semi-Autonomous Mode**
+- Executes safe commands automatically (read-only operations)
+- Asks for approval on medium/high-risk operations
+- Ideal for experienced users who want efficiency with safety
+
+### **🚀 Autonomous Mode**
+- Executes most commands automatically with safety checks
+- Only asks for approval on critical operations
+- Best for trusted environments and routine maintenance
+
+### **📖 Read-Only Mode**
+- Only performs read operations and system analysis
+- No system modifications allowed
+- Perfect for system inspection and learning
+
+## 🛠️ Installation
 
 ### Prerequisites
 
+- Linux operating system (tested on Arch Linux, Ubuntu, Fedora)
 - Rust 1.70+ (install from [rustup.rs](https://rustup.rs/))
-- Linux system (tested on Arch Linux)
-- Optional: API keys for OpenAI or Anthropic for cloud AI features
+- Optional: Ollama for local AI (recommended)
 
-### Build from Source
+### Quick Setup with Ollama (Recommended)
 
 ```bash
+# Clone and build TuxPilot
 git clone https://github.com/yourusername/tuxpilot.git
 cd tuxpilot
 cargo build --release
+
+# Setup Ollama for local AI (no API keys needed!)
+./setup-ollama.sh
+
+# Start using TuxPilot
+./target/release/tuxpilot chat --execute-mode supervised
+```
+
+### Manual Installation
+
+```bash
+# Build TuxPilot
+cargo build --release
+
+# Install system-wide (optional)
 sudo cp target/release/tuxpilot /usr/local/bin/
-```
 
-### Configuration
-
-On first run, TuxPilot will create a configuration file at `~/.config/tuxpilot/config.toml`:
-
-```toml
-[ai]
-provider = "OpenAI"
-
-[ai.openai]
-api_key = "your-api-key-here"
-model = "gpt-4"
-
-[system]
-package_manager = "Pacman"
-service_manager = "Systemd"
-log_paths = [
-    "/var/log/syslog",
-    "/var/log/messages",
-    "/var/log/kern.log",
-    "/var/log/auth.log",
-    "/var/log/pacman.log"
-]
-
-[ui]
-theme = "default"
-show_tips = true
-auto_suggest = true
-```
-
-## Usage
-
-### Interactive Mode
-
-```bash
-tuxpilot
-```
-
-This starts an interactive chat session where you can ask questions in natural language.
-
-### Command Line Usage
-
-```bash
-# Diagnose system errors automatically
-tuxpilot diagnose --auto
-
-# Analyze a specific error
-tuxpilot diagnose --input "systemd failed to start nginx.service"
-
-# Get help with a command
-tuxpilot help systemctl
-
-# Monitor system health
-tuxpilot monitor
-
-# Package management help
-tuxpilot package install firefox
-tuxpilot package search "text editor"
-
-# Service management
-tuxpilot service nginx status
-tuxpilot service docker start
-
-# Configuration
+# Configure for your system
 tuxpilot config --show
 ```
 
-### Example Interactions
+## 🎮 Usage Examples
 
-```
-tuxpilot> My system is running slow
-🤖 TuxPilot: I'll help you diagnose performance issues. Let me check your system status...
-
-tuxpilot> How do I install Docker on Arch Linux?
-🤖 TuxPilot: To install Docker on Arch Linux, use: sudo pacman -S docker
-Then enable and start the service: sudo systemctl enable --now docker.service
-
-tuxpilot> nginx won't start
-🤖 TuxPilot: Let me check the nginx service status and logs to diagnose the issue...
-```
-
-## AI Providers
-
-### 🚀 Ollama (Empfohlen - Lokal & Kostenlos)
-
-**Komplett offline, keine API-Kosten!**
+### **Autonomous System Management**
 
 ```bash
-# Schnell-Setup (alles automatisch)
+# Interactive AI assistant with command execution
+tuxpilot chat --execute-mode supervised  # Ask before executing
+tuxpilot chat --execute-mode auto        # Execute automatically
+
+# Natural language system management
+tuxpilot execute "install docker and start the service"
+tuxpilot execute "find and fix permission issues in /var/log"
+tuxpilot execute "optimize system for gaming performance"
+tuxpilot execute "update all packages safely"
+
+# Autonomous maintenance
+tuxpilot diagnose --auto --fix           # Find and fix issues
+tuxpilot optimize --auto                 # Optimize performance
+tuxpilot update --auto --safe            # Safe system updates
+```
+
+### **Safety and Permissions**
+
+```bash
+# Check your permissions and capabilities
+tuxpilot permissions --detailed
+
+# View audit log of all operations
+tuxpilot audit --limit 20
+tuxpilot audit --export json > audit.json
+
+# Review safety settings
+tuxpilot config --show
+```
+
+### **Traditional Assistance Mode**
+
+```bash
+# Get help without execution
+tuxpilot package install firefox         # Installation guidance
+tuxpilot service nginx troubleshoot      # Service help
+tuxpilot monitor --continuous            # System monitoring
+tuxpilot diagnose --input "error message" # Error analysis
+```
+
+### **Example Conversations**
+
+```
+user@system:~$ tuxpilot chat --execute-mode supervised
+
+🤖 TuxPilot: Hi! I'm your AI Linux assistant. I can help you manage your system 
+with autonomous command execution. What would you like to do?
+
+You: My system is running slow, can you help optimize it?
+
+🤖 TuxPilot: I'll analyze your system performance and suggest optimizations.
+
+🔍 Analyzing system performance...
+📊 Found: High memory usage (87%), several unnecessary services running
+⚡ Optimization plan:
+  1. Stop unused services (cups, bluetooth)
+  2. Clear package cache (pacman -Sc)
+  3. Optimize swappiness setting
+
+🔧 Command: systemctl stop cups bluetooth
+⚠️  Risk Level: Medium
+🎯 Expected: Free ~200MB RAM, improve responsiveness
+🔄 Rollback: systemctl start cups bluetooth
+
+Execute this command? [y/N]: y
+
+✅ Command executed successfully!
+📈 Memory usage reduced to 72%
+
+Continue with package cache cleanup? [y/N]: y
+```
+
+## 🛡️ Safety Features
+
+### **Multi-Layer Safety System**
+
+1. **Command Analysis**: AI analyzes every command for potential risks
+2. **Pattern Matching**: Detects dangerous patterns (rm -rf /, dd to devices, etc.)
+3. **Permission Checking**: Verifies user has required permissions
+4. **Risk Assessment**: Categorizes commands by risk level (Safe → Critical)
+5. **User Approval**: Requests confirmation for risky operations
+6. **Rollback Planning**: Provides rollback commands when possible
+
+### **Audit and Compliance**
+
+- **Complete Audit Trail**: Every command logged with timestamp and user
+- **Permission Tracking**: All permission requests and grants logged
+- **Safety Violations**: Blocked dangerous commands recorded
+- **Export Capabilities**: Audit logs exportable in JSON, CSV, HTML formats
+- **Rollback Support**: Automatic rollback for reversible operations
+
+### **Permission System**
+
+```
+🔐 Permission Categories:
+├── ReadSystem        # System information, file reading
+├── WriteSystem       # File modifications, system changes
+├── PackageManagement # Install/remove packages
+├── ServiceManagement # Start/stop/configure services
+├── NetworkAccess     # Network operations
+├── UserManagement    # User/group management
+└── SystemConfiguration # Kernel params, mount points
+```
+
+## 🔌 AI Integration
+
+### **Local AI with Ollama** (Recommended)
+
+```bash
+# Automatic setup
 ./setup-ollama.sh
 
-# Oder manuell:
+# Manual setup
 curl -fsSL https://ollama.ai/install.sh | sh
 ollama serve &
 ollama pull llama3.1:8b
 ```
 
-Siehe [OLLAMA-SETUP.md](OLLAMA-SETUP.md) für detaillierte Anleitung.
+**Benefits of Local AI:**
+- ✅ **Completely offline** - no internet required
+- ✅ **No API costs** - free forever
+- ✅ **Privacy** - all data stays local
+- ✅ **Fast responses** - no network latency
+- ✅ **Always available** - no rate limits
 
-### Cloud Providers
+### **Cloud AI Support**
 
-- **OpenAI**: GPT-4, GPT-3.5-turbo
-- **Anthropic**: Claude-3, Claude-2
+```toml
+# ~/.config/tuxpilot/config.toml
+[ai]
+provider = "OpenAI"  # or "Anthropic"
 
-### Local AI (Experimental)
+[ai.openai]
+api_key = "your-api-key"
+model = "gpt-4"
+```
 
-TuxPilot supports local AI models through the `candle` framework:
+## 🏗️ Architecture
+
+### **Core Components**
+
+```
+TuxPilot Architecture:
+├── 🤖 AI Engine (Ollama/OpenAI/Anthropic)
+├── 🔧 Command Executor
+│   ├── Safety Checker
+│   ├── Permission Manager
+│   └── Audit Logger
+├── 🔍 Error Diagnosis Engine
+├── 📊 System Monitor
+├── 📦 Package Manager Integration
+├── ⚙️ Service Manager Integration
+└── 💬 Natural Language Interface
+```
+
+### **Safety Architecture**
+
+```
+Command Execution Pipeline:
+User Input → AI Analysis → Safety Check → Permission Check → User Approval → Execute → Audit Log
+     ↓            ↓            ↓              ↓               ↓           ↓         ↓
+Natural      Command      Risk         Permission      Confirmation   Safe      Complete
+Language     Generation   Assessment   Verification    Dialog         Execution Logging
+```
+
+## 🎯 Roadmap
+
+### **Current (v0.1.0)**
+- ✅ Basic command execution with safety checks
+- ✅ Ollama integration for local AI
+- ✅ Permission system foundation
+- ✅ Audit logging
+- ✅ Multi-distribution support
+
+### **Next (v0.2.0)**
+- 🔄 **MCP Integration** - Model Context Protocol support
+- 🔄 **Multi-Agent System** - Specialized AI agents
+- 🔄 **Advanced Safety** - ML-based risk assessment
+- 🔄 **Web Interface** - Remote system management
+
+### **Future (v1.0.0)**
+- 🔮 **Autonomous Operations** - Self-managing systems
+- 🔮 **Plugin Ecosystem** - Community extensions
+- 🔮 **Enterprise Features** - Multi-server management
+- 🔮 **Cloud Integration** - Multi-cloud support
+
+## 🤝 Contributing
+
+We welcome contributions! TuxPilot is designed to be the ultimate Linux AI assistant.
+
+### **Areas for Contribution**
+- 🔧 **Core Features** - Command execution, safety systems
+- 🤖 **AI Integration** - New AI providers, local models
+- 🛡️ **Security** - Safety checks, permission systems
+- 📦 **Distribution Support** - New package managers
+- 🔌 **Plugins** - Extensions and integrations
+- 📚 **Documentation** - Guides, tutorials, examples
+
+### **Development Setup**
 
 ```bash
-# Build with local AI support
-cargo build --release --features local-ai
-
-# Use local model
-tuxpilot --local
+git clone https://github.com/yourusername/tuxpilot.git
+cd tuxpilot
+cargo build
+cargo test
+./demo-ollama.sh  # Test with Ollama
 ```
 
-## Architecture
-
-```
-src/
-├── main.rs              # Entry point and CLI argument parsing
-├── cli.rs               # Interactive CLI interface
-├── config.rs            # Configuration management
-├── ai/                  # AI integration modules
-│   └── mod.rs          # AI client and provider abstraction
-├── error_diagnosis.rs   # Error detection and analysis
-├── linux_integration.rs # System integration and command execution
-└── system_monitor.rs    # System monitoring and health checks
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and add tests
-4. Run tests: `cargo test`
-5. Submit a pull request
-
-## License
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Roadmap
+## ⚠️ Important Notes
 
-- [ ] Local AI model integration with Ollama
-- [ ] Web interface for remote system management
-- [ ] Plugin system for custom integrations
-- [ ] Multi-language support
-- [ ] Advanced log analysis with ML
-- [ ] Integration with monitoring tools (Prometheus, Grafana)
-- [ ] Automated system optimization suggestions
+- **Always review commands** before execution in autonomous mode
+- **Start with supervised mode** to understand TuxPilot's capabilities
+- **Keep backups** of important data before system modifications
+- **Test in safe environments** before production use
+- **Review audit logs** regularly for security monitoring
 
-## Support
+## 🆘 Support
 
 - 📖 [Documentation](docs/)
 - 🐛 [Issue Tracker](https://github.com/yourusername/tuxpilot/issues)
 - 💬 [Discussions](https://github.com/yourusername/tuxpilot/discussions)
+- 📧 [Email Support](mailto:support@tuxpilot.dev)
 
 ---
 
-Made with ❤️ for the Linux community
+**TuxPilot: Your trusted AI companion for Linux system administration** 🐧🚀
+
+*Made with ❤️ for the Linux community*

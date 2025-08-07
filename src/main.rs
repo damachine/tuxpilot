@@ -6,6 +6,7 @@ mod ai;
 mod cli;
 mod config;
 mod error_diagnosis;
+mod execution;
 mod linux_integration;
 mod system_monitor;
 
@@ -77,8 +78,38 @@ enum Commands {
     },
     
     /// Interactive chat mode
-    Chat,
-    
+    Chat {
+        /// Execution mode for commands
+        #[arg(long, default_value = "supervised")]
+        execute_mode: String,
+    },
+
+    /// Execute a command with AI assistance
+    Execute {
+        /// Natural language description of what to do
+        description: String,
+        /// Execution mode (supervised, semi-auto, autonomous, read-only)
+        #[arg(long, default_value = "supervised")]
+        mode: String,
+    },
+
+    /// Show execution permissions and capabilities
+    Permissions {
+        /// Show detailed permission information
+        #[arg(long)]
+        detailed: bool,
+    },
+
+    /// View audit log of executed commands
+    Audit {
+        /// Number of recent entries to show
+        #[arg(short, long, default_value = "10")]
+        limit: usize,
+        /// Export format (json, csv, html)
+        #[arg(long)]
+        export: Option<String>,
+    },
+
     /// Configure TuxPilot settings
     Config {
         /// Show current configuration

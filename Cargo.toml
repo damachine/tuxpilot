@@ -50,6 +50,8 @@ dirs = "5.0"
 # Text Processing
 regex = "1.10"
 chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+html-escape = "0.2"
 
 # Local AI Model Support (optional)
 candle-core = { version = "0.3", optional = true }

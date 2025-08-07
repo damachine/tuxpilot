@@ -1,256 +1,274 @@
 # 🐧 TuxPilot + Ollama Setup Guide
 
-**Lokale AI ohne Cloud-Abhängigkeit und API-Kosten!**
+**Local AI without cloud dependency and API costs!**
 
-## 🚀 **Schnell-Setup (Automatisch)**
+## 🚀 **Quick Setup (Automatic)**
 
 ```bash
-# Alles automatisch installieren und konfigurieren
+# Install and configure everything automatically
 ./setup-ollama.sh
 ```
 
-Das Script macht alles für dich:
-- ✅ Ollama installieren
-- ✅ Service starten  
-- ✅ Modell herunterladen
-- ✅ TuxPilot konfigurieren
-- ✅ Kompilieren und testen
+The script does everything for you:
+- ✅ Install Ollama
+- ✅ Start service
+- ✅ Download model
+- ✅ Configure TuxPilot
+- ✅ Test integration
 
-## 🔧 **Manuelles Setup**
+## 🔧 **Manual Setup**
 
-### **1. Ollama installieren**
+### **1. Install Ollama**
 
 ```bash
-# Ollama herunterladen und installieren
+# Official installation script
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Prüfen ob installiert
-ollama --version
+# Or on Arch Linux
+sudo pacman -S ollama
+
+# Or on Ubuntu/Debian
+curl -fsSL https://ollama.ai/install.sh | sh
 ```
 
-### **2. Ollama Service starten**
+### **2. Start Ollama Service**
 
 ```bash
-# Service im Hintergrund starten
+# Start Ollama server
 ollama serve &
 
-# Oder als systemd Service (empfohlen)
-sudo systemctl enable ollama
-sudo systemctl start ollama
+# Or as systemd service
+sudo systemctl enable --now ollama
 ```
 
-### **3. AI-Modell herunterladen**
+### **3. Download AI Model**
 
 ```bash
-# Empfohlenes Modell (ca. 4.7 GB)
+# Download recommended model (4GB)
 ollama pull llama3.1:8b
 
-# Weitere Optionen:
-ollama pull mistral:7b        # Schneller, kleiner
-ollama pull codellama:7b      # Speziell für Code
-ollama pull llama3.1:70b      # Sehr gut, braucht viel RAM (40+ GB)
+# Or smaller model for limited resources (2GB)
+ollama pull llama3.1:7b
 
-# Verfügbare Modelle anzeigen
-ollama list
+# Or larger model for better performance (14GB)
+ollama pull llama3.1:70b
 ```
 
-### **4. TuxPilot konfigurieren**
+### **4. Test Ollama**
 
 ```bash
-# Konfigurationsverzeichnis erstellen
-mkdir -p ~/.config/tuxpilot
+# Test if Ollama is working
+curl http://localhost:11434/api/tags
 
-# Ollama-Konfiguration kopieren
-cp examples/ollama-config.toml ~/.config/tuxpilot/config.toml
-
-# Oder manuell bearbeiten
-nano ~/.config/tuxpilot/config.toml
+# Interactive test
+ollama run llama3.1:8b
 ```
 
-**Beispiel-Konfiguration:**
-```toml
+### **5. Configure TuxPilot**
+
+TuxPilot automatically detects Ollama! No configuration needed.
+
+```bash
+# TuxPilot will automatically use Ollama
+./target/release/tuxpilot
+
+# Force Ollama usage
+./target/release/tuxpilot --local
+```
+
+## 🎯 **Model Recommendations**
+
+### **For Most Users: llama3.1:8b**
+- **Size**: ~4GB
+- **Performance**: Excellent for Linux tasks
+- **Speed**: Fast responses
+- **Memory**: 8GB RAM recommended
+
+### **For Limited Resources: llama3.1:7b**
+- **Size**: ~2GB
+- **Performance**: Good for basic tasks
+- **Speed**: Very fast
+- **Memory**: 4GB RAM minimum
+
+### **For Power Users: llama3.1:70b**
+- **Size**: ~14GB
+- **Performance**: Best quality responses
+- **Speed**: Slower but more accurate
+- **Memory**: 16GB+ RAM required
+
+## 🔧 **Advanced Configuration**
+
+### **Custom Ollama Configuration**
+
+```bash
+# ~/.config/tuxpilot/config.toml
 [ai]
 provider = "Ollama"
 
 [ai.ollama]
 base_url = "http://localhost:11434"
 model = "llama3.1:8b"
+timeout = 30
+max_tokens = 2048
 temperature = 0.7
-context_size = 4096
-timeout_seconds = 30
 ```
 
-### **5. TuxPilot kompilieren**
+### **Multiple Models**
 
 ```bash
-cargo build --release
+# Download multiple models for different tasks
+ollama pull llama3.1:8b      # General purpose
+ollama pull codellama:13b     # Code generation
+ollama pull mistral:7b        # Fast responses
+
+# Switch models in TuxPilot config
+model = "codellama:13b"  # For development tasks
 ```
 
-## 🎯 **Verwendung**
-
-### **Grundlegende Befehle:**
+### **Performance Tuning**
 
 ```bash
-# Interaktiver Chat-Modus (komplett offline!)
-./target/release/tuxpilot chat
+# Increase Ollama memory limit
+export OLLAMA_MAX_LOADED_MODELS=2
+export OLLAMA_NUM_PARALLEL=4
 
-# Paket-Management Hilfe
-./target/release/tuxpilot package install firefox
-
-# Automatische Fehlerdiagnose
-./target/release/tuxpilot diagnose --auto
-
-# System-Monitoring mit AI-Analyse
-./target/release/tuxpilot monitor
-
-# Befehl erklären lassen
-./target/release/tuxpilot explain systemctl
+# GPU acceleration (if available)
+export OLLAMA_GPU_LAYERS=35
 ```
 
-### **Chat-Beispiele:**
+## 🚀 **Usage Examples**
 
-```
-tuxpilot> Mein System ist langsam, was kann ich tun?
-🤖 TuxPilot: Ich helfe dir bei der Performance-Analyse...
-
-tuxpilot> Wie installiere ich Docker auf Arch Linux?
-🤖 TuxPilot: Für Docker auf Arch Linux verwendest du...
-
-tuxpilot> nginx startet nicht, was ist das Problem?
-🤖 TuxPilot: Lass mich den nginx Service analysieren...
-```
-
-## ⚙️ **Konfiguration**
-
-### **Modell wechseln:**
+### **Basic Usage**
 
 ```bash
-# Anderes Modell herunterladen
-ollama pull mistral:7b
+# Start TuxPilot with Ollama
+./target/release/tuxpilot
 
-# In config.toml ändern
-[ai.ollama]
-model = "mistral:7b"
+# Ask questions
+tuxpilot> How do I install Docker?
+🤖 TuxPilot: To install Docker on your system...
+
+# Execute commands with AI assistance
+tuxpilot execute "install nginx and start it"
 ```
 
-### **Performance optimieren:**
-
-```toml
-[ai.ollama]
-# Für schnellere Antworten
-temperature = 0.3
-context_size = 2048
-timeout_seconds = 15
-
-# Für bessere Qualität
-temperature = 0.8
-context_size = 8192
-timeout_seconds = 60
-```
-
-### **Remote Ollama Server:**
-
-```toml
-[ai.ollama]
-base_url = "http://192.168.1.100:11434"  # Anderer Server
-model = "llama3.1:8b"
-```
-
-## 🔍 **Troubleshooting**
-
-### **"Ollama API error" Fehler:**
+### **Advanced Features**
 
 ```bash
-# Prüfen ob Ollama läuft
-curl http://localhost:11434/api/tags
+# Autonomous mode with local AI
+tuxpilot chat --execute-mode autonomous
 
-# Service neu starten
-pkill ollama
-ollama serve &
+# System diagnosis with local AI
+tuxpilot diagnose --auto --fix
 
-# Logs prüfen
+# Package management with AI help
+tuxpilot package search "web server"
+```
+
+## 🛠️ **Troubleshooting**
+
+### **Ollama Not Starting**
+
+```bash
+# Check if Ollama is running
+ps aux | grep ollama
+
+# Check logs
 journalctl -u ollama -f
+
+# Restart service
+sudo systemctl restart ollama
 ```
 
-### **"Model not found" Fehler:**
+### **Model Download Issues**
 
 ```bash
-# Verfügbare Modelle anzeigen
-ollama list
+# Check available space
+df -h
 
-# Modell herunterladen
+# Clear Ollama cache
+ollama rm llama3.1:8b
 ollama pull llama3.1:8b
 
-# In config.toml korrigieren
-model = "llama3.1:8b"  # Exakter Name aus 'ollama list'
+# Check network connection
+curl -I https://ollama.ai
 ```
 
-### **Langsame Antworten:**
+### **TuxPilot Not Detecting Ollama**
 
 ```bash
-# Kleineres Modell verwenden
-ollama pull mistral:7b
+# Check Ollama API
+curl http://localhost:11434/api/tags
 
-# Oder Timeout erhöhen
-timeout_seconds = 120
+# Force Ollama in TuxPilot
+export TUXPILOT_AI_PROVIDER=ollama
+
+# Check TuxPilot config
+tuxpilot config --show
 ```
 
-### **Speicher-Probleme:**
+### **Performance Issues**
 
 ```bash
-# Kleineres Modell verwenden
-ollama pull llama3.1:8b    # statt 70b
+# Check system resources
+htop
 
-# Oder Context reduzieren
-context_size = 2048        # statt 4096
+# Reduce model size
+ollama pull llama3.1:7b
+
+# Adjust TuxPilot timeout
+# In config.toml:
+timeout = 60  # Increase timeout
 ```
 
-## 📊 **Modell-Empfehlungen**
+## 🔒 **Security & Privacy**
 
-| Modell | Größe | RAM | Geschwindigkeit | Qualität | Verwendung |
-|--------|-------|-----|----------------|----------|------------|
-| `mistral:7b` | 4.1 GB | 8 GB | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Schnelle Antworten |
-| `llama3.1:8b` | 4.7 GB | 8 GB | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | **Empfohlen** |
-| `codellama:7b` | 3.8 GB | 8 GB | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Code-Probleme |
-| `llama3.1:70b` | 40 GB | 64 GB | ⭐⭐ | ⭐⭐⭐⭐⭐ | Beste Qualität |
+### **Benefits of Local AI**
 
-## 🎉 **Vorteile von Ollama + TuxPilot**
+✅ **Complete Privacy** - All data stays on your machine
+✅ **No Internet Required** - Works completely offline
+✅ **No API Costs** - Free forever
+✅ **No Rate Limits** - Use as much as you want
+✅ **Custom Models** - Train your own models
+✅ **Enterprise Ready** - Full control over AI
 
-✅ **Komplett offline** - keine Internetverbindung nötig
-✅ **Keine API-Kosten** - einmal installiert, immer kostenlos  
-✅ **Datenschutz** - alle Daten bleiben lokal
-✅ **Schnell** - keine Netzwerk-Latenz
-✅ **Anpassbar** - verschiedene Modelle für verschiedene Zwecke
-✅ **Zuverlässig** - keine Rate-Limits oder Service-Ausfälle
+### **Security Considerations**
 
-## 🔄 **Systemd Service (Optional)**
+- Ollama runs locally on port 11434
+- No data sent to external servers
+- Models stored in `~/.ollama/models/`
+- All processing happens locally
 
-Für automatischen Start bei Boot:
+## 📊 **Performance Comparison**
+
+| Model | Size | Speed | Quality | RAM Required |
+|-------|------|-------|---------|--------------|
+| llama3.1:7b | 2GB | ⚡⚡⚡ | ⭐⭐⭐ | 4GB |
+| llama3.1:8b | 4GB | ⚡⚡ | ⭐⭐⭐⭐ | 8GB |
+| llama3.1:70b | 14GB | ⚡ | ⭐⭐⭐⭐⭐ | 16GB+ |
+
+## 🎉 **Success!**
+
+If everything is working, you should see:
 
 ```bash
-# Service-Datei erstellen
-sudo tee /etc/systemd/system/ollama.service << 'EOF'
-[Unit]
-Description=Ollama Service
-After=network-online.target
+$ tuxpilot config --show
+[2024-01-15T10:30:00Z INFO tuxpilot::config] Ollama detected, switching to local AI provider
 
-[Service]
-ExecStart=/usr/local/bin/ollama serve
-User=ollama
-Group=ollama
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=default.target
-EOF
-
-# User erstellen
-sudo useradd -r -s /bin/false -m -d /usr/share/ollama ollama
-
-# Service aktivieren
-sudo systemctl enable ollama
-sudo systemctl start ollama
+AI Provider: Ollama
+Model: llama3.1:8b
+Status: ✅ Connected
 ```
 
-**Jetzt hast du eine komplett lokale AI-Lösung! 🚀**
+**You now have a completely local, private AI assistant for Linux! 🚀**
+
+## 🆘 **Need Help?**
+
+- 📖 [TuxPilot Documentation](README.md)
+- 🐛 [Report Issues](https://github.com/yourusername/tuxpilot/issues)
+- 💬 [Community Discussions](https://github.com/yourusername/tuxpilot/discussions)
+- 🌐 [Ollama Documentation](https://ollama.ai/docs)
+
+---
+
+**TuxPilot + Ollama: The perfect combination for private, powerful Linux AI assistance! 🐧🤖**

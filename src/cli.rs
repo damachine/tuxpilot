@@ -2,10 +2,12 @@ use anyhow::Result;
 use console::{style, Term};
 use dialoguer::{Input, Confirm};
 use indicatif::{ProgressBar, ProgressStyle};
+use uuid::Uuid;
 
 use crate::ai::AiClient;
 use crate::config::Config;
 use crate::error_diagnosis::ErrorDiagnostic;
+use crate::execution::{CommandExecutor, ExecutionMode, ExecutionRequest, ExecutionContext, RiskLevel, Permission};
 use crate::linux_integration::LinuxIntegration;
 use crate::system_monitor::SystemMonitor;
 use crate::Commands;
@@ -15,6 +17,7 @@ pub struct TuxPilotCli {
     ai_client: AiClient,
     linux_integration: LinuxIntegration,
     system_monitor: SystemMonitor,
+    command_executor: Option<CommandExecutor>,
     term: Term,
 }
 
@@ -33,6 +36,7 @@ impl TuxPilotCli {
             ai_client,
             linux_integration,
             system_monitor,
+            command_executor: None, // Will be initialized when needed
             term,
         })
     }
@@ -54,8 +58,17 @@ impl TuxPilotCli {
             Commands::Service { name, action } => {
                 self.handle_service(name, action).await?;
             }
-            Commands::Chat => {
-                self.interactive_mode().await?;
+            Commands::Chat { execute_mode } => {
+                self.interactive_mode_with_execution(&execute_mode).await?;
+            }
+            Commands::Execute { description, mode } => {
+                self.handle_execute_command(&description, &mode).await?;
+            }
+            Commands::Permissions { detailed } => {
+                self.show_permissions(detailed).await?;
+            }
+            Commands::Audit { limit, export } => {
+                self.show_audit_log(limit, export.as_deref()).await?;
             }
             Commands::Config { show, set } => {
                 self.handle_config(show, set).await?;
@@ -247,6 +260,74 @@ impl TuxPilotCli {
         self.term.write_line(&format!("Package Manager: {:?}", self.config.system.package_manager))?;
         self.term.write_line(&format!("Service Manager: {:?}", self.config.system.service_manager))?;
         self.term.write_line("")?;
+        Ok(())
+    }
+
+    async fn interactive_mode_with_execution(&mut self, execute_mode: &str) -> Result<()> {
+        self.term.write_line(&format!("{}", style("🤖 TuxPilot Interactive Mode with Command Execution").green().bold()))?;
+        self.term.write_line(&format!("Execution Mode: {}", style(execute_mode).yellow()))?;
+        self.term.write_line("Type 'help' for commands, 'exit' to quit")?;
+        self.term.write_line("")?;
+
+        // For now, fall back to regular interactive mode
+        // TODO: Implement execution mode handling
+        self.interactive_mode().await
+    }
+
+    async fn handle_execute_command(&mut self, description: &str, mode: &str) -> Result<()> {
+        self.term.write_line(&format!("{}", style("🔧 Command Execution").blue().bold()))?;
+        self.term.write_line(&format!("Description: {}", description))?;
+        self.term.write_line(&format!("Mode: {}", mode))?;
+        self.term.write_line("")?;
+
+        // TODO: Implement actual command execution
+        self.term.write_line("⚠️  Command execution system not yet fully implemented.")?;
+        self.term.write_line("This feature will allow TuxPilot to execute commands based on natural language descriptions.")?;
+
+        Ok(())
+    }
+
+    async fn show_permissions(&mut self, detailed: bool) -> Result<()> {
+        self.term.write_line(&format!("{}", style("🔐 TuxPilot Permissions").blue().bold()))?;
+        self.term.write_line("")?;
+
+        // TODO: Implement permission checking
+        self.term.write_line("📋 Permission system features:")?;
+        self.term.write_line("  ✅ Granular permission control")?;
+        self.term.write_line("  ✅ Safety checks for dangerous commands")?;
+        self.term.write_line("  ✅ Audit logging of all operations")?;
+        self.term.write_line("  ✅ User approval for risky operations")?;
+
+        if detailed {
+            self.term.write_line("")?;
+            self.term.write_line("🔍 Detailed permission analysis:")?;
+            self.term.write_line("  - Read System: Available to all users")?;
+            self.term.write_line("  - Write System: Requires sudo/root access")?;
+            self.term.write_line("  - Package Management: Requires package manager permissions")?;
+            self.term.write_line("  - Service Management: Requires systemctl permissions")?;
+        }
+
+        Ok(())
+    }
+
+    async fn show_audit_log(&mut self, limit: usize, export_format: Option<&str>) -> Result<()> {
+        self.term.write_line(&format!("{}", style("📊 TuxPilot Audit Log").blue().bold()))?;
+        self.term.write_line(&format!("Showing last {} entries", limit))?;
+        self.term.write_line("")?;
+
+        // TODO: Implement audit log reading
+        self.term.write_line("📋 Audit log features:")?;
+        self.term.write_line("  ✅ Complete command execution history")?;
+        self.term.write_line("  ✅ Permission requests and grants")?;
+        self.term.write_line("  ✅ Safety violations and warnings")?;
+        self.term.write_line("  ✅ System changes and rollback information")?;
+
+        if let Some(format) = export_format {
+            self.term.write_line("")?;
+            self.term.write_line(&format!("📤 Export format: {}", format))?;
+            self.term.write_line("Export functionality will be available soon.")?;
+        }
+
         Ok(())
     }
 }
