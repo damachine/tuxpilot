@@ -72,11 +72,33 @@ pub enum PackageManager {
     Portage,
 }
 
+impl std::fmt::Display for PackageManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PackageManager::Pacman => write!(f, "Pacman"),
+            PackageManager::Apt => write!(f, "Apt"),
+            PackageManager::Dnf => write!(f, "Dnf"),
+            PackageManager::Zypper => write!(f, "Zypper"),
+            PackageManager::Portage => write!(f, "Portage"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServiceManager {
     Systemd,
     OpenRC,
     SysVInit,
+}
+
+impl std::fmt::Display for ServiceManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ServiceManager::Systemd => write!(f, "Systemd"),
+            ServiceManager::OpenRC => write!(f, "OpenRC"),
+            ServiceManager::SysVInit => write!(f, "SysVInit"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

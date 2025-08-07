@@ -2,12 +2,12 @@ use anyhow::Result;
 use console::{style, Term};
 use dialoguer::{Input, Confirm};
 use indicatif::{ProgressBar, ProgressStyle};
-use uuid::Uuid;
+
 
 use crate::ai::AiClient;
 use crate::config::Config;
 use crate::error_diagnosis::ErrorDiagnostic;
-use crate::execution::{CommandExecutor, ExecutionMode, ExecutionRequest, ExecutionContext, RiskLevel, Permission};
+use crate::execution::CommandExecutor;
 use crate::linux_integration::LinuxIntegration;
 use crate::system_monitor::SystemMonitor;
 use crate::Commands;
@@ -27,7 +27,7 @@ impl TuxPilotCli {
         config.detect_system()?;
         
         let ai_client = AiClient::new(&config, use_local).await?;
-        let linux_integration = LinuxIntegration::new(&config)?;
+        let linux_integration = LinuxIntegration::new(&config).await?;
         let system_monitor = SystemMonitor::new(&config)?;
         let term = Term::stdout();
 
@@ -259,6 +259,19 @@ impl TuxPilotCli {
         self.term.write_line(&format!("AI Provider: {:?}", self.config.ai.provider))?;
         self.term.write_line(&format!("Package Manager: {:?}", self.config.system.package_manager))?;
         self.term.write_line(&format!("Service Manager: {:?}", self.config.system.service_manager))?;
+
+        // Show distribution information if available
+        if let Some(ref distro_info) = self.linux_integration.distribution_info {
+            self.term.write_line("")?;
+            self.term.write_line(&format!("{}", style("🐧 Detected Distribution:").blue().bold()))?;
+            self.term.write_line(&format!("Name: {}", distro_info.name))?;
+            self.term.write_line(&format!("Version: {}", distro_info.version))?;
+            self.term.write_line(&format!("ID: {}", distro_info.id))?;
+            self.term.write_line(&format!("Architecture: {}", distro_info.architecture))?;
+            self.term.write_line(&format!("Init System: {}", distro_info.init_system))?;
+            self.term.write_line(&format!("Shell: {}", distro_info.shell))?;
+        }
+
         self.term.write_line("")?;
         Ok(())
     }

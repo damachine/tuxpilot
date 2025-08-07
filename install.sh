@@ -1,0 +1,175 @@
+#!/bin/bash
+
+# TuxPilot Installation Script
+# This script installs TuxPilot on Linux systems
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_header() {
+    echo -e "${GREEN}"
+    echo "╔══════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                            TuxPilot Installer                               ║"
+    echo "║                     AI-Powered Linux System Administrator                   ║"
+    echo "║                                v0.1.0                                       ║"
+    echo "╚══════════════════════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+check_requirements() {
+    print_info "Checking system requirements..."
+    
+    # Check if running on Linux
+    if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+        print_error "TuxPilot is designed for Linux systems only"
+        exit 1
+    fi
+    
+    # Check for Rust/Cargo
+    if ! command -v cargo &> /dev/null; then
+        print_warning "Cargo not found. Installing Rust..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source ~/.cargo/env
+    fi
+    
+    # Check for Git
+    if ! command -v git &> /dev/null; then
+        print_error "Git is required but not installed"
+        exit 1
+    fi
+    
+    print_success "System requirements satisfied"
+}
+
+install_dependencies() {
+    print_info "Installing system dependencies..."
+    
+    # Detect package manager and install dependencies
+    if command -v pacman &> /dev/null; then
+        sudo pacman -S --needed --noconfirm openssl pkg-config
+    elif command -v apt &> /dev/null; then
+        sudo apt update
+        sudo apt install -y libssl-dev pkg-config build-essential
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install -y openssl-devel pkg-config gcc
+    elif command -v zypper &> /dev/null; then
+        sudo zypper install -y libopenssl-devel pkg-config gcc
+    else
+        print_warning "Unknown package manager. Please install openssl-dev and pkg-config manually"
+    fi
+    
+    print_success "Dependencies installed"
+}
+
+build_tuxpilot() {
+    print_info "Building TuxPilot..."
+    
+    # Build in release mode
+    cargo build --release
+    
+    if [ $? -eq 0 ]; then
+        print_success "TuxPilot built successfully"
+    else
+        print_error "Build failed"
+        exit 1
+    fi
+}
+
+install_binary() {
+    print_info "Installing TuxPilot binary..."
+    
+    # Create installation directory
+    sudo mkdir -p /usr/local/bin
+    
+    # Copy binary
+    sudo cp target/release/tuxpilot /usr/local/bin/
+    sudo chmod +x /usr/local/bin/tuxpilot
+    
+    # Create config directory
+    mkdir -p ~/.config/tuxpilot
+    
+    print_success "TuxPilot installed to /usr/local/bin/tuxpilot"
+}
+
+setup_completion() {
+    print_info "Setting up shell completion..."
+    
+    # Generate completion scripts
+    mkdir -p ~/.local/share/bash-completion/completions
+    /usr/local/bin/tuxpilot --help > /dev/null 2>&1 || true
+    
+    print_success "Shell completion configured"
+}
+
+verify_installation() {
+    print_info "Verifying installation..."
+    
+    if command -v tuxpilot &> /dev/null; then
+        VERSION=$(tuxpilot --version)
+        print_success "Installation verified: $VERSION"
+        
+        print_info "Testing basic functionality..."
+        tuxpilot permissions > /dev/null
+        tuxpilot config --show > /dev/null
+        
+        print_success "Basic functionality test passed"
+    else
+        print_error "Installation verification failed"
+        exit 1
+    fi
+}
+
+show_next_steps() {
+    echo ""
+    print_success "🎉 TuxPilot installation completed successfully!"
+    echo ""
+    echo -e "${BLUE}Next Steps:${NC}"
+    echo "1. Run 'tuxpilot --help' to see available commands"
+    echo "2. Try 'tuxpilot config --show' to view your system configuration"
+    echo "3. Use 'tuxpilot permissions' to understand the permission system"
+    echo "4. Start with 'tuxpilot chat' for interactive assistance"
+    echo ""
+    echo -e "${BLUE}Optional:${NC}"
+    echo "• Install Ollama for local AI: https://ollama.ai/"
+    echo "• Read the documentation: docs/GETTING_STARTED.md"
+    echo "• Join the community: https://github.com/damachine/tuxpilot"
+    echo ""
+    echo -e "${GREEN}Happy system administration! 🐧🤖${NC}"
+}
+
+main() {
+    print_header
+    
+    check_requirements
+    install_dependencies
+    build_tuxpilot
+    install_binary
+    setup_completion
+    verify_installation
+    show_next_steps
+}
+
+# Run main function
+main "$@"

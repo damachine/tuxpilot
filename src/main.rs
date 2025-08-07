@@ -2,13 +2,23 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+mod agents;
 mod ai;
+mod automation;
 mod cli;
 mod config;
+mod containers;
 mod error_diagnosis;
 mod execution;
 mod linux_integration;
+mod mcp;
+mod monitoring;
+mod nlp;
+mod performance;
+mod plugins;
+mod security;
 mod system_monitor;
+mod web;
 
 use crate::cli::TuxPilotCli;
 use crate::config::Config;

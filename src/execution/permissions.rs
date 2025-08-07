@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::path::Path;
+
 
 use crate::config::Config;
 use super::Permission;
@@ -45,7 +45,7 @@ impl PermissionManager {
     }
 
     async fn detect_user_permissions() -> Result<UserPermissions> {
-        use std::os::unix::fs::MetadataExt;
+
         
         // Get current user info
         let uid = unsafe { libc::getuid() };

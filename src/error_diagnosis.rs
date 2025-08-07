@@ -6,7 +6,9 @@ use chrono::{DateTime, Utc};
 
 use crate::linux_integration::LinuxIntegration;
 
-#[derive(Debug, Clone)]
+pub mod advanced;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ErrorDiagnostic {
     pub error_message: String,
     pub context: String,
@@ -17,7 +19,7 @@ pub struct ErrorDiagnostic {
     pub category: ErrorCategory,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ErrorSeverity {
     Low,
     Medium,
@@ -25,7 +27,7 @@ pub enum ErrorSeverity {
     Critical,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ErrorCategory {
     System,
     Network,
