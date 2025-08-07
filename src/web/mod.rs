@@ -235,29 +235,7 @@ pub enum WebSocketMessage {
     },
 }
 
-/// Dashboard data structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DashboardData {
-    pub system_overview: SystemOverview,
-    pub recent_activities: Vec<ActivityEntry>,
-    pub agent_status: Vec<AgentStatusEntry>,
-    pub system_health: SystemHealthMetrics,
-    pub alerts: Vec<AlertEntry>,
-}
 
-/// System overview for dashboard
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemOverview {
-    pub hostname: String,
-    pub distribution: String,
-    pub kernel_version: String,
-    pub uptime_hours: u32,
-    pub cpu_usage: f32,
-    pub memory_usage: f32,
-    pub disk_usage: f32,
-    pub network_interfaces: u32,
-    pub running_services: u32,
-}
 
 /// Activity entry for dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -404,92 +382,7 @@ impl WebServer {
         Ok(())
     }
 
-    pub async fn get_dashboard_data(&self, _session_id: &str) -> Result<DashboardData> {
-        // Get system overview
-        let system_overview = SystemOverview {
-            hostname: "tuxpilot-server".to_string(),
-            distribution: self.linux_integration.distribution_info
-                .as_ref()
-                .map(|d| d.name.clone())
-                .unwrap_or_else(|| "Unknown".to_string()),
-            kernel_version: "6.1.0".to_string(),
-            uptime_hours: 48,
-            cpu_usage: 25.5,
-            memory_usage: 68.2,
-            disk_usage: 45.8,
-            network_interfaces: 2,
-            running_services: 45,
-        };
 
-        // Get recent activities (mock data)
-        let recent_activities = vec![
-            ActivityEntry {
-                timestamp: chrono::Utc::now() - chrono::Duration::minutes(5),
-                activity_type: ActivityType::CommandExecution,
-                description: "System status check completed".to_string(),
-                user: Some("admin".to_string()),
-                success: true,
-            },
-            ActivityEntry {
-                timestamp: chrono::Utc::now() - chrono::Duration::minutes(15),
-                activity_type: ActivityType::AgentAction,
-                description: "Security scan completed".to_string(),
-                user: None,
-                success: true,
-            },
-        ];
-
-        // Get agent status
-        let agent_status = vec![
-            AgentStatusEntry {
-                agent_id: "system-agent".to_string(),
-                agent_name: "System Management Agent".to_string(),
-                status: AgentStatus::Active,
-                last_activity: chrono::Utc::now() - chrono::Duration::minutes(2),
-                tasks_completed: 156,
-                success_rate: 0.98,
-            },
-            AgentStatusEntry {
-                agent_id: "security-agent".to_string(),
-                agent_name: "Security Analysis Agent".to_string(),
-                status: AgentStatus::Idle,
-                last_activity: chrono::Utc::now() - chrono::Duration::minutes(30),
-                tasks_completed: 42,
-                success_rate: 0.95,
-            },
-        ];
-
-        // System health metrics
-        let system_health = SystemHealthMetrics {
-            overall_health: HealthStatus::Good,
-            cpu_health: HealthStatus::Good,
-            memory_health: HealthStatus::Warning,
-            disk_health: HealthStatus::Good,
-            network_health: HealthStatus::Excellent,
-            service_health: HealthStatus::Good,
-        };
-
-        // Alerts
-        let alerts = vec![
-            AlertEntry {
-                id: uuid::Uuid::new_v4().to_string(),
-                severity: AlertSeverity::Warning,
-                title: "High Memory Usage".to_string(),
-                description: "Memory usage is above 65%".to_string(),
-                timestamp: chrono::Utc::now() - chrono::Duration::minutes(10),
-                acknowledged: false,
-                source: "system-monitor".to_string(),
-            },
-        ];
-
-        Ok(DashboardData {
-            system_overview,
-            recent_activities,
-            agent_status,
-            system_health,
-            alerts,
-        })
-    }
 
     pub async fn execute_command_via_web(&self, session_id: &str, command: &str) -> Result<String> {
         // Verify session and permissions
@@ -590,52 +483,20 @@ impl WebServer {
         Ok(ai_response)
     }
 
-    async fn process_chat_message(&self, request: &ChatRequest, user_id: &str) -> Result<ChatMessage> {
-        use crate::agents::AgentContext;
+    async fn process_chat_message(&self, request: &ChatRequest, _user_id: &str) -> Result<ChatMessage> {
+        use crate::ai::AiClient;
 
-        // Create agent context
-        let context = AgentContext {
-            session_id: user_id.to_string(),
-            user_request: request.message.clone(),
-            system_state: crate::agents::SystemState {
-                cpu_usage: 25.0,
-                memory_usage: 60.0,
-                disk_usage: 40.0,
-                network_active: true,
-                services_running: vec!["nginx".to_string(), "ssh".to_string()],
-                recent_errors: vec![],
-            },
-            config: self.config.clone(),
-            linux_integration: self.linux_integration.clone(),
-        };
+        // Create AI client for direct communication with Ollama
+        let ai_client = AiClient::new(&self.config, true).await?;
 
-        // Get AI response from agent system
-        let mut agent_system = self.agent_system.write().await;
-        let responses = agent_system.execute_user_request(&request.message, &context).await?;
+        // Process the message directly with AI
+        let ai_response = ai_client.process_query(&request.message).await?;
 
-        let response_content = if responses.is_empty() {
+        // Use the AI response directly
+        let response_content = if ai_response.trim().is_empty() {
             "I understand your request. How can I help you with your Linux system?".to_string()
         } else {
-            responses.into_iter()
-                .map(|r| {
-                    let mut content = Vec::new();
-                    if !r.recommendations.is_empty() {
-                        content.push(format!("Recommendations: {}", r.recommendations.join(", ")));
-                    }
-                    if !r.actions_taken.is_empty() {
-                        content.push(format!("Actions taken: {}", r.actions_taken.join(", ")));
-                    }
-                    if !r.next_steps.is_empty() {
-                        content.push(format!("Next steps: {}", r.next_steps.join(", ")));
-                    }
-                    if content.is_empty() {
-                        format!("Agent {} completed task successfully", r.agent_id)
-                    } else {
-                        content.join("\n")
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("\n\n")
+            ai_response
         };
 
         Ok(ChatMessage {

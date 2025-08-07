@@ -1,5 +1,4 @@
 use anyhow::Result;
-use std::collections::HashMap;
 
 use crate::config::Config;
 use crate::linux_integration::LinuxIntegration;

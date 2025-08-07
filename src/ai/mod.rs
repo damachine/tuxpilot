@@ -172,10 +172,13 @@ impl AiClient {
         Ok(content.to_string())
     }
 
-    async fn send_local_request(&self, _system_prompt: &str, _user_prompt: &str) -> Result<String> {
-        // Placeholder for local AI implementation
-        // This would integrate with candle-core or similar for local inference
-        Ok("Local AI model not yet implemented. Please use cloud providers for now.".to_string())
+    async fn send_local_request(&self, system_prompt: &str, user_prompt: &str) -> Result<String> {
+        // For local requests, use Ollama if available
+        if self.config.ai.provider == AiProvider::Ollama || self.config.ai.ollama.is_some() {
+            self.send_ollama_request(system_prompt, user_prompt).await
+        } else {
+            Ok("Local AI model not configured. Please configure Ollama or use cloud providers.".to_string())
+        }
     }
 
     async fn send_ollama_request(&self, system_prompt: &str, user_prompt: &str) -> Result<String> {

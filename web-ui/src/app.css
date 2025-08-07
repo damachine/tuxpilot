@@ -1,0 +1,68 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom scrollbar */
+@layer utilities {
+	.scrollbar-thin {
+		scrollbar-width: thin;
+		scrollbar-color: rgb(156 163 175) transparent;
+	}
+	
+	.scrollbar-thin::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	
+	.scrollbar-thin::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	
+	.scrollbar-thin::-webkit-scrollbar-thumb {
+		background-color: rgb(156 163 175);
+		border-radius: 3px;
+	}
+	
+	.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+		background-color: rgb(107 114 128);
+	}
+	
+	.dark .scrollbar-thin {
+		scrollbar-color: rgb(75 85 99) transparent;
+	}
+	
+	.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+		background-color: rgb(75 85 99);
+	}
+	
+	.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+		background-color: rgb(107 114 128);
+	}
+}
+
+/* Code highlighting */
+@layer components {
+	.prose pre {
+		@apply bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700;
+	}
+	
+	.prose code {
+		@apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+	}
+	
+	.prose pre code {
+		@apply bg-transparent p-0;
+	}
+}
+
+/* Animation utilities */
+@layer utilities {
+	.animate-typing {
+		animation: typing 1s steps(20, end) infinite;
+	}
+	
+	@keyframes typing {
+		0%, 50% { opacity: 1; }
+		51%, 100% { opacity: 0; }
+	}
+}

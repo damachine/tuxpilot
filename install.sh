@@ -40,26 +40,46 @@ print_header() {
 
 check_requirements() {
     print_info "Checking system requirements..."
-    
+
     # Check if running on Linux
     if [[ "$OSTYPE" != "linux-gnu"* ]]; then
         print_error "TuxPilot is designed for Linux systems only"
         exit 1
     fi
-    
+
     # Check for Rust/Cargo
     if ! command -v cargo &> /dev/null; then
         print_warning "Cargo not found. Installing Rust..."
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source ~/.cargo/env
     fi
-    
+
     # Check for Git
     if ! command -v git &> /dev/null; then
         print_error "Git is required but not installed"
         exit 1
     fi
-    
+
+    # Check for Node.js and npm (required for web UI)
+    if ! command -v node &> /dev/null; then
+        print_warning "Node.js not found. The web UI requires Node.js to build."
+        print_info "Please install Node.js from https://nodejs.org/ or using your package manager:"
+        print_info "  • Ubuntu/Debian: sudo apt install nodejs npm"
+        print_info "  • Arch Linux: sudo pacman -S nodejs npm"
+        print_info "  • Fedora: sudo dnf install nodejs npm"
+        print_info "  • openSUSE: sudo zypper install nodejs npm"
+        print_warning "Continuing without web UI build..."
+        WEB_UI_AVAILABLE=false
+    elif ! command -v npm &> /dev/null; then
+        print_warning "npm not found. The web UI requires npm to build."
+        print_info "Please install npm using your package manager or Node.js installer."
+        print_warning "Continuing without web UI build..."
+        WEB_UI_AVAILABLE=false
+    else
+        print_success "Node.js and npm found - web UI will be built"
+        WEB_UI_AVAILABLE=true
+    fi
+
     print_success "System requirements satisfied"
 }
 
@@ -83,12 +103,63 @@ install_dependencies() {
     print_success "Dependencies installed"
 }
 
+build_web_ui() {
+    if [ "$WEB_UI_AVAILABLE" = true ]; then
+        print_info "Building web UI..."
+
+        # Navigate to web-ui directory
+        cd web-ui
+
+        # Install dependencies
+        print_info "Installing web UI dependencies..."
+        npm install
+
+        if [ $? -ne 0 ]; then
+            print_error "Failed to install web UI dependencies"
+            cd ..
+            return 1
+        fi
+
+        # Build the web UI
+        print_info "Building Svelte application..."
+        npm run build
+
+        if [ $? -ne 0 ]; then
+            print_error "Failed to build web UI"
+            cd ..
+            return 1
+        fi
+
+        # Copy built files to static directory
+        print_info "Copying web UI files to static directory..."
+        cp -r build/* ../static/
+
+        if [ $? -eq 0 ]; then
+            print_success "Web UI built successfully"
+        else
+            print_error "Failed to copy web UI files"
+            cd ..
+            return 1
+        fi
+
+        # Return to project root
+        cd ..
+    else
+        print_warning "Skipping web UI build (Node.js/npm not available)"
+        print_info "TuxPilot will still work, but the web interface will not be available"
+    fi
+}
+
 build_tuxpilot() {
     print_info "Building TuxPilot..."
-    
-    # Build in release mode
+
+    # Build web UI first
+    build_web_ui
+
+    # Build Rust backend in release mode
+    print_info "Building Rust backend..."
     cargo build --release
-    
+
     if [ $? -eq 0 ]; then
         print_success "TuxPilot built successfully"
     else
@@ -150,6 +221,25 @@ show_next_steps() {
     echo "2. Try 'tuxpilot config --show' to view your system configuration"
     echo "3. Use 'tuxpilot permissions' to understand the permission system"
     echo "4. Start with 'tuxpilot chat' for interactive assistance"
+
+    if [ "$WEB_UI_AVAILABLE" = true ]; then
+        echo "5. Launch the web interface with 'tuxpilot web' and visit http://127.0.0.1:8080"
+    fi
+
+    echo ""
+    echo -e "${BLUE}Available Interfaces:${NC}"
+    echo "• Command Line: 'tuxpilot chat' for interactive terminal chat"
+
+    if [ "$WEB_UI_AVAILABLE" = true ]; then
+        echo "• Web Interface: 'tuxpilot web' for modern browser-based interface"
+        echo "  - ChatGPT-inspired dark theme"
+        echo "  - Real-time chat with AI agents"
+        echo "  - Configuration management"
+        echo "  - System dashboard"
+    else
+        echo "• Web Interface: Not available (Node.js/npm required for building)"
+    fi
+
     echo ""
     echo -e "${BLUE}Optional:${NC}"
     echo "• Install Ollama for local AI: https://ollama.ai/"

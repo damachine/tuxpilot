@@ -1,7 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use regex::Regex;
 use chrono::{DateTime, Utc};
 
 use crate::linux_integration::LinuxIntegration;

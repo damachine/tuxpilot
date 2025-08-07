@@ -19,7 +19,7 @@ pub struct AiConfig {
     pub ollama: Option<OllamaConfig>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum AiProvider {
     OpenAI,
     Anthropic,
@@ -32,12 +32,16 @@ pub struct OpenAiConfig {
     pub api_key: String,
     pub model: String,
     pub base_url: Option<String>,
+    pub temperature: Option<f32>,
+    pub max_tokens: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicConfig {
     pub api_key: String,
     pub model: String,
+    pub temperature: Option<f32>,
+    pub max_tokens: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,6 +58,7 @@ pub struct OllamaConfig {
     pub temperature: f32,
     pub context_size: usize,
     pub timeout_seconds: u64,
+    pub max_tokens: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,6 +66,17 @@ pub struct SystemConfig {
     pub package_manager: PackageManager,
     pub log_paths: Vec<PathBuf>,
     pub service_manager: ServiceManager,
+    pub execution_mode: ExecutionMode,
+    pub require_confirmation: bool,
+    pub command_timeout_seconds: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ExecutionMode {
+    Supervised,
+    SemiAuto,
+    Autonomous,
+    ReadOnly,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -106,6 +122,9 @@ pub struct UiConfig {
     pub theme: String,
     pub show_tips: bool,
     pub auto_suggest: bool,
+    pub web_port: u16,
+    pub bind_address: String,
+    pub ssl_enabled: bool,
 }
 
 impl Default for Config {
@@ -117,15 +136,23 @@ impl Default for Config {
                     api_key: String::new(),
                     model: "gpt-4".to_string(),
                     base_url: None,
+                    temperature: Some(0.7),
+                    max_tokens: Some(2048),
                 }),
-                anthropic: None,
+                anthropic: Some(AnthropicConfig {
+                    api_key: String::new(),
+                    model: "claude-3-sonnet-20240229".to_string(),
+                    temperature: Some(0.7),
+                    max_tokens: Some(2048),
+                }),
                 local: None,
                 ollama: Some(OllamaConfig {
                     base_url: "http://localhost:11434".to_string(),
-                    model: "llama3.1:8b".to_string(),
+                    model: "gemma3:latest".to_string(),
                     temperature: 0.7,
                     context_size: 4096,
                     timeout_seconds: 30,
+                    max_tokens: Some(2048),
                 }),
             },
             system: SystemConfig {
@@ -138,11 +165,17 @@ impl Default for Config {
                     PathBuf::from("/var/log/pacman.log"),
                 ],
                 service_manager: ServiceManager::Systemd,
+                execution_mode: ExecutionMode::Supervised,
+                require_confirmation: true,
+                command_timeout_seconds: 30,
             },
             ui: UiConfig {
                 theme: "default".to_string(),
                 show_tips: true,
                 auto_suggest: true,
+                web_port: 8082,
+                bind_address: "127.0.0.1".to_string(),
+                ssl_enabled: false,
             },
         }
     }
@@ -186,7 +219,7 @@ impl Config {
         Ok(())
     }
 
-    fn default_config_path() -> Result<PathBuf> {
+    pub fn default_config_path() -> Result<PathBuf> {
         let config_dir = dirs::config_dir()
             .context("Failed to get config directory")?
             .join("tuxpilot");

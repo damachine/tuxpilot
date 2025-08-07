@@ -94,7 +94,7 @@ impl EntityExtractor {
         
         for entity in entities {
             let overlaps = filtered_entities.iter().any(|existing: &Entity| {
-                (entity.start_pos < existing.end_pos && entity.end_pos > existing.start_pos)
+                entity.start_pos < existing.end_pos && entity.end_pos > existing.start_pos
             });
             
             if !overlaps {

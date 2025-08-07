@@ -1,39 +1,95 @@
-# 🔧 TuxPilot Troubleshooting Guide
+# TuxPilot Troubleshooting Guide
 
-**Solutions for common issues and problems**
+This guide helps you diagnose and resolve common issues with TuxPilot.
+
+## 🔍 Quick Diagnostics
+
+### Check TuxPilot Status
+
+```bash
+# Check if TuxPilot is installed
+which tuxpilot
+
+# Check version
+tuxpilot --version
+
+# Validate configuration
+tuxpilot config validate
+
+# Test AI connection
+tuxpilot ai test
+
+# Check system status
+tuxpilot status
+```
+
+### View Logs
+
+```bash
+# Main TuxPilot log
+tail -f ~/.config/tuxpilot/tuxpilot.log
+
+# Audit log
+tail -f ~/.config/tuxpilot/audit.log
+
+# Web server log (if running)
+journalctl -f -u tuxpilot-web
+```
 
 ## 🚨 Common Issues
 
-### **TuxPilot Won't Start**
+### 1. TuxPilot Won't Start
 
-#### **Problem**: `tuxpilot: command not found`
-**Solution:**
+**Symptoms:**
+- Command not found
+- Permission denied
+- Configuration errors
+
+**Diagnosis:**
 ```bash
-# Check if TuxPilot is built
-ls target/release/tuxpilot
+# Check installation
+ls -la /usr/local/bin/tuxpilot
+echo $PATH
 
-# If not built, build it
-cargo build --release
+# Check permissions
+ls -la ~/.config/tuxpilot/
 
-# Add to PATH or use full path
-export PATH=$PATH:$(pwd)/target/release
-# Or
-./target/release/tuxpilot --help
+# Check configuration syntax
+tuxpilot config validate
 ```
 
-#### **Problem**: Configuration errors on startup
-**Solution:**
+**Solutions:**
+
+**Issue: Command not found**
 ```bash
-# Check configuration
-tuxpilot config --show
+# Reinstall TuxPilot
+cd /path/to/tuxpilot
+./install.sh
 
-# Reset configuration
-rm ~/.config/tuxpilot/config.toml
-tuxpilot config --show  # Will recreate with defaults
+# Or add to PATH manually
+export PATH=$PATH:/usr/local/bin
+echo 'export PATH=$PATH:/usr/local/bin' >> ~/.bashrc
+```
 
-# Check permissions on config directory
-ls -la ~/.config/tuxpilot/
+**Issue: Permission denied**
+```bash
+# Fix file permissions
 chmod 755 ~/.config/tuxpilot/
+chmod 644 ~/.config/tuxpilot/config.toml
+chmod +x /usr/local/bin/tuxpilot
+
+# Fix ownership
+sudo chown $USER:$USER ~/.config/tuxpilot/ -R
+```
+
+**Issue: Configuration errors**
+```bash
+# Reset configuration to defaults
+mv ~/.config/tuxpilot/config.toml ~/.config/tuxpilot/config.toml.backup
+tuxpilot config init
+
+# Or fix specific issues
+tuxpilot config validate --verbose
 ```
 
 ### **AI Integration Issues**

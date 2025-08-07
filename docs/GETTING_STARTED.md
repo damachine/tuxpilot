@@ -1,39 +1,75 @@
-# 🚀 Getting Started with TuxPilot
+# TuxPilot Getting Started Guide
 
-**Your AI-powered Linux assistant with autonomous command execution**
+Welcome to TuxPilot! This guide will help you get up and running with your AI-powered Linux system administration assistant.
 
-## 📋 Quick Start Guide
+## 🚀 Quick Start
 
-### **1. Installation**
+### 1. Installation
 
+**Automated Installation (Recommended):**
 ```bash
-# Clone the repository
+# Clone and install TuxPilot
 git clone https://github.com/damachine/tuxpilot.git
 cd tuxpilot
-
-# Build TuxPilot
-cargo build --release
-
-# Optional: Install system-wide
-sudo cp target/release/tuxpilot /usr/local/bin/
+chmod +x install.sh
+./install.sh
 ```
 
-### **2. Setup Local AI (Recommended)**
+The installer will:
+- ✅ Check system requirements
+- ✅ Install Rust if needed
+- ✅ Build the TuxPilot backend
+- ✅ Build the web interface (if Node.js available)
+- ✅ Install TuxPilot system-wide
+- ✅ Set up configuration directories
 
+### 2. First Run
+
+**Start with the Web Interface (Recommended):**
 ```bash
-# Automatic setup
-./setup-ollama.sh
+# Start the web server
+tuxpilot web
 
-# Or manual setup
-curl -fsSL https://ollama.ai/install.sh | sh
-ollama serve &
-ollama pull llama3.1:8b
+# Open your browser to http://127.0.0.1:8080
 ```
 
-### **3. First Run**
-
+**Or use the Command Line Interface:**
 ```bash
-# Check your system and permissions
+# Start interactive chat
+tuxpilot chat
+```
+
+### 3. Initial Configuration
+
+**Configure AI Provider:**
+```bash
+# For local AI (Ollama - recommended)
+tuxpilot config set ai.provider ollama
+tuxpilot config set ai.model llama3.1:8b
+
+# For OpenAI
+tuxpilot config set ai.provider openai
+tuxpilot config set ai.api_key your-api-key-here
+
+# For Anthropic (Claude)
+tuxpilot config set ai.provider anthropic
+tuxpilot config set ai.api_key your-api-key-here
+```
+
+## 🎯 Your First Tasks
+
+### Task 1: System Overview
+Ask TuxPilot about your system:
+
+**Web Interface:**
+1. Open http://127.0.0.1:8080
+2. Type: "Give me an overview of my system"
+3. Explore the dashboard for real-time metrics
+
+**Command Line:**
+```bash
+tuxpilot chat
+> "Show me my system information and current performance"
 tuxpilot permissions --detailed
 
 # Start with supervised mode (safest)

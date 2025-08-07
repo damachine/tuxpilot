@@ -1,0 +1,42 @@
+{
+  "name": "tuxpilot-web-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Modern web interface for TuxPilot - AI-powered Linux system management",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.5",
+    "@sveltejs/kit": "^2.20.2",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@tailwindcss/typography": "^0.5.15",
+    "@types/node": "^22.10.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-svelte": "^3.0.0",
+    "postcss": "^8.4.49",
+    "prettier": "^3.4.2",
+    "prettier-plugin-svelte": "^3.2.8",
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "svelte": "^5.19.3",
+    "svelte-check": "^4.0.8",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vite": "^6.2.3"
+  },
+  "dependencies": {
+    "@tabler/icons-svelte": "^3.29.0",
+    "highlight.js": "^11.10.0",
+    "marked": "^15.0.4",
+    "marked-highlight": "^2.2.0"
+  }
+}

@@ -7,7 +7,6 @@ pub mod analytics;
 pub mod predictive;
 pub mod alerting;
 pub mod metrics;
-pub mod dashboard;
 
 use crate::config::Config;
 use crate::linux_integration::LinuxIntegration;
@@ -21,7 +20,6 @@ pub struct AdvancedMonitoringSystem {
     analytics_engine: analytics::AnalyticsEngine,
     predictive_engine: predictive::PredictiveEngine,
     alerting_system: alerting::AlertingSystem,
-    dashboard: dashboard::MonitoringDashboard,
     monitoring_state: MonitoringState,
 }
 
@@ -205,7 +203,6 @@ impl AdvancedMonitoringSystem {
         let analytics_engine = analytics::AnalyticsEngine::new().await?;
         let predictive_engine = predictive::PredictiveEngine::new().await?;
         let alerting_system = alerting::AlertingSystem::new(&config).await?;
-        let dashboard = dashboard::MonitoringDashboard::new().await?;
 
         let monitoring_state = MonitoringState {
             is_active: false,
@@ -223,7 +220,6 @@ impl AdvancedMonitoringSystem {
             analytics_engine,
             predictive_engine,
             alerting_system,
-            dashboard,
             monitoring_state,
         })
     }
@@ -295,13 +291,7 @@ impl AdvancedMonitoringSystem {
         self.analytics_engine.generate_recommendations(&health_assessment, &performance_trends).await
     }
 
-    pub async fn get_monitoring_dashboard(&self) -> Result<dashboard::DashboardData> {
-        self.dashboard.generate_dashboard_data(
-            &self.monitoring_state,
-            &self.collect_current_metrics().await?,
-            &self.assess_system_health().await?
-        ).await
-    }
+
 
     pub async fn stop_monitoring(&mut self) -> Result<()> {
         println!("🔄 Stopping monitoring system...");

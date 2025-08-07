@@ -1,5 +1,4 @@
 use anyhow::Result;
-use std::collections::HashMap;
 
 use super::{Plugin, PluginMetadata, PluginRequest, PluginResponse, PluginCapability, PluginStatus, PluginState, PluginHealth};
 

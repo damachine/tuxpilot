@@ -58,24 +58,37 @@ TuxPilot is a comprehensive AI-powered assistant for Linux systems that helps wi
 ### **Quick Install (Recommended)**
 
 ```bash
-# Clone and install TuxPilot
+# Clone and install TuxPilot with integrated web UI
 git clone https://github.com/damachine/tuxpilot.git
 cd tuxpilot
 chmod +x install.sh
 ./install.sh
 ```
 
+The installer automatically:
+- ✅ Checks system requirements (Rust, Node.js, npm)
+- ✅ Builds the Rust backend
+- ✅ Builds the modern web interface (if Node.js available)
+- ✅ Installs TuxPilot system-wide
+- ✅ Sets up configuration directories
+
 ### **Manual Installation**
 
 ```bash
-# Prerequisites: Rust 1.70+, Git
+# Prerequisites: Rust 1.70+, Git, Node.js 18+ (for web UI)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source ~/.cargo/env
 
 # Clone and build
 git clone https://github.com/damachine/tuxpilot.git
 cd tuxpilot
-cargo build --release
+
+# Build everything (backend + web UI)
+./build.sh
+
+# Or build separately
+cargo build --release          # Rust backend only
+./build-web-ui.sh              # Web UI only
 
 # Install system-wide
 sudo cp target/release/tuxpilot /usr/local/bin/
@@ -86,28 +99,64 @@ mkdir -p ~/.config/tuxpilot
 
 **Arch Linux:**
 ```bash
-sudo pacman -S openssl pkg-config
+sudo pacman -S openssl pkg-config nodejs npm
 ```
 
 **Ubuntu/Debian:**
 ```bash
 sudo apt update
-sudo apt install libssl-dev pkg-config build-essential
+sudo apt install libssl-dev pkg-config build-essential nodejs npm
 ```
 
 **Fedora:**
 ```bash
-sudo dnf install openssl-devel pkg-config gcc
+sudo dnf install openssl-devel pkg-config gcc nodejs npm
 ```
 
 **openSUSE:**
 ```bash
-sudo zypper install libopenssl-devel pkg-config gcc
+sudo zypper install libopenssl-devel pkg-config gcc nodejs npm
 ```
+
+### **System Requirements**
+
+**Minimum:**
+- Linux distribution (any major distro)
+- 2GB RAM
+- 1GB disk space
+- Rust 1.70+
+
+**Recommended:**
+- 4GB+ RAM
+- 2GB+ disk space
+- Node.js 18+ (for web interface)
+- Modern terminal with Unicode support
+
+**For Web Interface:**
+- Node.js 18+ and npm
+- Modern web browser (Chrome, Firefox, Safari, Edge)
 
 ## 🎮 **Usage Examples**
 
-### **Interactive AI Assistant**
+### **🌐 Web Interface (Recommended)**
+
+```bash
+# Start the web server
+tuxpilot web
+
+# Access the modern web interface
+# Open http://127.0.0.1:8080 in your browser
+```
+
+**Web Interface Features:**
+- 💬 **ChatGPT-inspired chat interface** with real-time AI communication
+- 📊 **System dashboard** with live metrics and performance monitoring
+- ⚙️ **Configuration management** with form-based editing and validation
+- 🌙 **Dark/light theme toggle** with localStorage persistence
+- 📱 **Responsive design** for desktop and mobile devices
+- 🔒 **Secure authentication** and session management
+
+### **💻 Interactive CLI Assistant**
 
 ```bash
 # Start interactive chat mode
@@ -317,12 +366,20 @@ tuxpilot plugins install security-scanner
 
 ## 📚 **Documentation**
 
-- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Complete setup and first steps
-- **[API Reference](docs/API_REFERENCE.md)** - Complete command reference
-- **[Plugin Development](docs/PLUGIN_SYSTEM.md)** - Create custom plugins
-- **[Multi-Agent System](docs/MULTI_AGENT_SYSTEM.md)** - Advanced AI agent configuration
-- **[MCP Integration](docs/MCP_INTEGRATION.md)** - Model Context Protocol setup
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+### **Main Documentation**
+- 📖 **[Getting Started Guide](docs/GETTING_STARTED.md)** - Complete setup and first steps
+- 🌐 **[Web Interface Guide](docs/WEB_INTERFACE.md)** - Modern web interface usage
+- ⚙️ **[Configuration Guide](docs/CONFIGURATION.md)** - Comprehensive configuration management
+- 📡 **[API Documentation](docs/API_DOCUMENTATION.md)** - REST API and WebSocket reference
+- 🔧 **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Solutions for common issues
+
+### **Module Documentation**
+- 🤖 **[AI Agent System](src/agents/README.md)** - Multi-agent architecture and usage
+- 🔌 **[MCP Integration](src/mcp/README.md)** - Model Context Protocol implementation
+- 🌐 **[Web Server](src/web/README.md)** - Web server architecture and API
+- 🔄 **[Automation Framework](src/automation/README.md)** - Task automation and scheduling
+- 🛡️ **[Security Framework](src/security/README.md)** - Security scanning and hardening
+- 🐳 **[Container Management](src/containers/README.md)** - Docker and container orchestration
 
 ## 🤝 **Contributing**
 
@@ -368,9 +425,10 @@ cargo test
 - ✅ Natural language interface
 
 ### **Next (v0.2.0)**
-- 🔄 **Enhanced AI Integration** - Multiple AI provider support
+- ✅ **Web Interface** - Modern ChatGPT-inspired web interface with dark theme
+- ✅ **Enhanced AI Integration** - Multiple AI provider support (Ollama, OpenAI, Anthropic)
+- ✅ **Configuration Management** - Real-time web-based configuration with validation
 - 🔄 **Advanced Safety** - ML-based risk assessment
-- 🔄 **Web Interface** - Remote system management
 - 🔄 **Plugin Ecosystem** - Community plugin marketplace
 - 🔄 **Gaming Optimization** - Advanced gaming performance tuning
 
