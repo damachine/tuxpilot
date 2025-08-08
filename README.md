@@ -69,8 +69,10 @@ The installer automatically:
 - ✅ Checks system requirements (Rust, Node.js, npm)
 - ✅ Builds the Rust backend
 - ✅ Builds the modern web interface (if Node.js available)
-- ✅ Installs TuxPilot system-wide
+- ✅ Installs TuxPilot binary to `/usr/local/bin/`
+- ✅ Installs Web UI to `/usr/local/share/tuxpilot/web-ui/`
 - ✅ Sets up configuration directories
+- ✅ Configures shell completions
 
 ### **Manual Installation**
 
@@ -92,8 +94,22 @@ cargo build --release          # Rust backend only
 
 # Install system-wide
 sudo cp target/release/tuxpilot /usr/local/bin/
+sudo mkdir -p /usr/local/share/tuxpilot/web-ui
+sudo cp -r web-ui/build/* /usr/local/share/tuxpilot/web-ui/
 mkdir -p ~/.config/tuxpilot
 ```
+
+### **Additional Installation Scripts**
+
+```bash
+# Install/update only the Web UI (standalone)
+./install-web-ui.sh
+
+# Uninstall TuxPilot completely
+./uninstall.sh
+```
+
+**Note**: The main `install.sh` script now automatically installs the Web UI to the system location when Node.js/npm is available.
 
 ### **Distribution-Specific Dependencies**
 

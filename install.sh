@@ -130,7 +130,7 @@ build_web_ui() {
             return 1
         fi
 
-        # Copy built files to static directory
+        # Copy built files to static directory (for development)
         print_info "Copying web UI files to static directory..."
         cp -r build/* ../static/
 
@@ -184,6 +184,34 @@ install_binary() {
     print_success "TuxPilot installed to /usr/local/bin/tuxpilot"
 }
 
+install_web_ui() {
+    if [ "$WEB_UI_AVAILABLE" = true ] && [ -d "web-ui/build" ]; then
+        print_info "Installing Web UI to system location..."
+        
+        # Create web UI installation directory
+        sudo mkdir -p /usr/local/share/tuxpilot/web-ui
+        
+        # Remove old installation if it exists
+        if [ -d "/usr/local/share/tuxpilot/web-ui" ]; then
+            print_info "Removing previous Web UI installation..."
+            sudo rm -rf /usr/local/share/tuxpilot/web-ui/*
+        fi
+        
+        # Copy built web UI files
+        sudo cp -r web-ui/build/* /usr/local/share/tuxpilot/web-ui/
+        
+        # Set appropriate permissions
+        sudo chmod -R 644 /usr/local/share/tuxpilot/web-ui/
+        sudo find /usr/local/share/tuxpilot/web-ui/ -type d -exec chmod 755 {} \;
+        
+        print_success "Web UI installed to /usr/local/share/tuxpilot/web-ui/"
+        print_info "Web UI will be served from system location when running 'tuxpilot web'"
+    else
+        print_warning "Skipping Web UI system installation (not built or Node.js/npm not available)"
+        print_info "Web UI will fall back to development location if available"
+    fi
+}
+
 setup_completion() {
     print_info "Setting up shell completion..."
     
@@ -206,6 +234,15 @@ verify_installation() {
         tuxpilot config --show > /dev/null
         
         print_success "Basic functionality test passed"
+        
+        # Verify Web UI installation
+        if [ "$WEB_UI_AVAILABLE" = true ]; then
+            if [ -f "/usr/local/share/tuxpilot/web-ui/index.html" ]; then
+                print_success "Web UI system installation verified"
+            else
+                print_warning "Web UI system installation not found, will use development fallback"
+            fi
+        fi
     else
         print_error "Installation verification failed"
         exit 1
@@ -232,6 +269,7 @@ show_next_steps() {
 
     if [ "$WEB_UI_AVAILABLE" = true ]; then
         echo "• Web Interface: 'tuxpilot web' for modern browser-based interface"
+        echo "  - Installed to: /usr/local/share/tuxpilot/web-ui/"
         echo "  - ChatGPT-inspired dark theme"
         echo "  - Real-time chat with AI agents"
         echo "  - Configuration management"
@@ -256,6 +294,7 @@ main() {
     install_dependencies
     build_tuxpilot
     install_binary
+    install_web_ui
     setup_completion
     verify_installation
     show_next_steps

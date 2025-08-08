@@ -56,8 +56,8 @@ impl HttpServer {
             .route("/health", get(health_check))
             .route("/api", get(api_info))
             // CSS is now handled by Svelte build
-            // Serve new Svelte UI static files
-            .nest_service("/_app", ServeDir::new("web-ui/build/_app"))
+            // Serve new Svelte UI static files with fallback paths
+            .nest_service("/_app", ServeDir::new(get_web_ui_assets_path()))
             // Fallback to serve index.html for SPA routing
             .fallback(serve_spa)
             // Add CORS middleware
@@ -80,10 +80,36 @@ impl HttpServer {
 
 // Handler functions
 
+/// Get the path to web UI assets with fallback logic
+fn get_web_ui_assets_path() -> String {
+    // Try system installation path first
+    let system_path = "/usr/local/share/tuxpilot/web-ui/_app";
+    if std::path::Path::new(system_path).exists() {
+        return system_path.to_string();
+    }
+    
+    // Fallback to development path
+    "web-ui/build/_app".to_string()
+}
+
+/// Get the path to the main index.html with fallback logic
+fn get_web_ui_index_path() -> String {
+    // Try system installation path first
+    let system_path = "/usr/local/share/tuxpilot/web-ui/index.html";
+    if std::path::Path::new(system_path).exists() {
+        return system_path.to_string();
+    }
+    
+    // Fallback to development path
+    "web-ui/build/index.html".to_string()
+}
+
 // Serve the new Svelte SPA
 async fn serve_spa() -> Html<String> {
-    // Try to read the built Svelte index.html
-    match std::fs::read_to_string("web-ui/build/index.html") {
+    // Try to read the built Svelte index.html with fallback paths
+    let index_path = get_web_ui_index_path();
+    
+    match std::fs::read_to_string(&index_path) {
         Ok(html) => Html(html),
         Err(_) => {
             // Fallback to a simple message if build doesn't exist
@@ -99,8 +125,9 @@ async fn serve_spa() -> Html<String> {
     <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui;">
         <div style="text-align: center;">
             <h1>🐧 TuxPilot</h1>
-            <p>Building new interface... Please run: <code>cd web-ui && npm run build</code></p>
-            <p><a href="/chat-legacy">Use Legacy Interface</a></p>
+            <p>Web UI not found. Please ensure TuxPilot is properly installed.</p>
+            <p>For development: <code>cd web-ui && npm run build</code></p>
+            <p>For system installation: Run the install script</p>
         </div>
     </div>
 </body>
